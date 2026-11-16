@@ -374,25 +374,43 @@ export function plan(options = {}) {
   };
 }
 
-export function apply(options = {}) {
+function nativeHealth(p) {
+  const clientUrl = pathToFileURL(path.join(root,'src','desktop-client.mjs')).href;
+  const code = `const {DesktopClient}=await import(${JSON.stringify(clientUrl)});console.log(JSON.stringify(await new DesktopClient(${JSON.stringify(p.home)}).health()));`;
+  return JSON.parse(execFileSync(p.node,['--input-type=module','-e',code],{windowsHide:true,timeout:20000,encoding:'utf8',env:{...process.env,DSH_CONTROL_HOME:p.home}}));
+}
+
+export function apply(options = {}, {readNativeHealth = nativeHealth} = {}) {
   const p = paths(options);
   const built = manifest(p);
+  const component = options.component ?? 'all';
+  if (!['all','supervisor'].includes(component)) throw new Error('component must be all or supervisor');
+  const supervisorOnly = component === 'supervisor';
   const busy = liveRuns(p.home);
-  if (busy.length) throw new Error(`Managed runs are still live (${busy.map(r => r.runId + ':' + r.status).join(', ')}); finish or hand them off before replacing execution code`);
+  if (busy.length && !supervisorOnly) throw new Error(`Managed runs are still live (${busy.map(r => r.runId + ':' + r.status).join(', ')}); finish or hand them off before replacing execution code`);
   const configured=runtimeConfig(p.home),runtime=inspectRuntime(configured);
   if(!runtime.compatible)throw new Error(runtime.warning);
   const mode = options.codexMode || (codexPluginCli(p) ? 'plugin' : 'config');
   if (!['plugin', 'config'].includes(mode)) throw new Error("codexMode must be 'plugin' or 'config'");
 
-  const nativeDigest = digestOf(path.join(root, 'src'));
+  let previous, serving;
+  if (supervisorOnly) {
+    const latest = fs.readdirSync(path.join(p.home,'install')).filter(n=>/^receipt-.*\.json$/.test(n)).sort().at(-1);
+    if (!latest) throw new Error('Supervisor-only update requires an existing installation');
+    previous = readJson(path.join(p.home,'install',latest)); serving = readNativeHealth(p);
+    if (!serving.ready || serving.protocolVersion !== built.protocolVersion || serving.archiveSha256 !== configured.verifiedArchiveSha256
+      || serving.sourceDigest !== previous.nativeRevision || previous.dsh.profile !== p.profile
+      || digestOf(previous.nativeSnapshot) !== previous.nativeRevision) throw new Error('Serving Native identity/protocol differs; supervisor-only activation refused');
+  }
+  const nativeDigest = supervisorOnly ? previous.nativeRevision : digestOf(path.join(root, 'src'));
   const beforeProfile = readProfileBlock(p.dshHome, p.profile);
   const beforeCodex = readCodexRegistration(p.codexRoot);
-  const nativeSnapshot = deployNative(p, nativeDigest);
+  const nativeSnapshot = supervisorOnly ? previous.nativeSnapshot : deployNative(p, nativeDigest);
   const serverDir = deployServer(p, built, built.packages.codex.digest.slice(0, 16));
   const registered = bundleRegistered(p.dshHome, p.profile);
   let codex, skill, profileWritten, pluginInstalled = false,codexWrittenHash;
   try {
-    profileWritten = writeProfileBlock(p.dshHome, p.profile, {home: p.home, snapshot: nativeSnapshot, registered,previous:beforeProfile.text});
+    if (!supervisorOnly) profileWritten = writeProfileBlock(p.dshHome, p.profile, {home: p.home, snapshot: nativeSnapshot, registered,previous:beforeProfile.text});
     if (mode === 'plugin') {
       const installed = installCodexPlugin(p, built);
       pluginInstalled = true;
@@ -408,10 +426,15 @@ export function apply(options = {}) {
       codex = {mode, file, serverEntry};
     }
     codexWrittenHash=sha256(beforeCodex.file);skill = installSkill(p, mode);
+    if (supervisorOnly) {
+      const current = readNativeHealth(p);
+      if (current.instanceId !== serving.instanceId || current.sourceDigest !== serving.sourceDigest
+        || readProfileBlock(p.dshHome,p.profile).text !== beforeProfile.text) throw new Error('Serving Native changed during supervisor-only activation');
+    }
   } catch (error) {
     // Explicit rollback of this project's own writes only; never touch other content.
     try { if (pluginInstalled) removeCodexPlugin(p); } catch { /* best effort */ }
-    const profileRestored=restoreRegistration(beforeProfile,profileWritten?.afterSha256);
+    const profileRestored=supervisorOnly || restoreRegistration(beforeProfile,profileWritten?.afterSha256);
     const codexRestored=restoreRegistration(beforeCodex,codexWrittenHash);
     throw new Error(`Install failed; unchanged owned registrations were restored, concurrent changes were preserved (${profileRestored&&codexRestored?'rollback complete':'inspect preserved registrations'}): ${error.message}`);
   }
@@ -421,12 +444,14 @@ export function apply(options = {}) {
     at: new Date().toISOString(),
     protocolVersion: built.protocolVersion,
     packageVersion: built.version,
+    component,
+    nativeVersion: supervisorOnly ? serving.pluginVersion : built.version,
     nativeSnapshot,
     nativeRevision: nativeDigest,
     serverDir,
     serverDigest: built.packages.codex.digest,
     codex,
-    dsh: {profile: p.profile, file: profileWritten.file, bundleRegistered: registered, blockMode: registered ? 'bundle' : 'file-url'},
+    dsh: supervisorOnly ? previous.dsh : {profile: p.profile, file: profileWritten.file, bundleRegistered: registered, blockMode: registered ? 'bundle' : 'file-url'},
     skill,
   };
   const receiptFile = path.join(p.home, 'install', `receipt-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
@@ -475,7 +500,7 @@ function main(argv) {
     if (!arg.startsWith('--')) continue;
     const equal=arg.indexOf('=');const key=arg.slice(2,equal<0?undefined:equal),inline=equal<0?undefined:arg.slice(equal+1);
     const value = inline ?? rest[++i];
-    const map = {home: 'home', 'codex-root': 'codexRoot', 'dsh-home': 'dshHome', profile: 'profile', dist: 'dist', node: 'node', 'codex-cli': 'codexCli', 'codex-mode': 'codexMode'};
+    const map = {home: 'home', 'codex-root': 'codexRoot', 'dsh-home': 'dshHome', profile: 'profile', dist: 'dist', node: 'node', 'codex-cli': 'codexCli', 'codex-mode': 'codexMode', component:'component'};
     if (!map[key]) throw new Error(`Unknown option --${key}`);
     options[map[key]] = value;
   }

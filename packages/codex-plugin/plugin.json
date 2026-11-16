@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dsh-control",
-  "version": "0.7.1",
-  "description": "Let Codex supervise bounded tasks on the local DeepSeek Harness Desktop session through a fixed tool set.",
+  "version": "0.7.2",
+  "description": "Connect Codex to local DeepSeek Harness projects and conversations; transmit messages unchanged and return observable results.",
   "author": {
     "name": "tuotuo512"
   },
@@ -11,7 +11,7 @@
     "deepseek-harness",
     "dsh",
     "mcp",
-    "delegation",
-    "supervisor"
+    "connection",
+    "conversations"
   ]
 }

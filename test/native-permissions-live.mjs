@@ -52,7 +52,7 @@ try{
   const tools=(await client.listTools()).tools;
   assert.ok(tools.some(t=>t.name==='dsh_preflight')&&tools.some(t=>t.name==='dsh_workspace_policy'));evidence.toolCount=tools.length;
   evidence.doctor=await call('doctor');assert.equal(evidence.doctor.ready,true);
-  assert.equal(evidence.doctor.desktop.pluginVersion,installation.packageVersion);
+  assert.equal(evidence.doctor.desktop.pluginVersion,installation.nativeVersion ?? installation.packageVersion);
   assert.equal(evidence.doctor.desktop.sourceDigest,installation.nativeRevision);
   assert.ok(evidence.doctor.desktop.permissionPresets.includes('danger-full-access'));
   let policy=await call('workspace_policy',{cwd});

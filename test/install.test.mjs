@@ -30,6 +30,28 @@ function workspace() {
 
 const cleanup = base => fs.rmSync(base, {recursive: true, force: true});
 
+test('supervisor-only activation preserves serving native code and active work',()=>{
+ const w=workspace();try{
+  const options={home:w.home,codexRoot:w.codexRoot,dshHome:w.dshHome,profile:'p1',dist:w.dist,codexMode:'config'};
+  const original=install.apply(options).receipt;
+  const profile=path.join(w.dshHome,'profiles','p1','cordis.patch.yml'),profileBefore=fs.readFileSync(profile,'utf8');
+  const run=path.join(w.home,'runs','run-'+'b'.repeat(24));fs.mkdirSync(run,{recursive:true});
+  const state=JSON.stringify({runId:'run-'+'b'.repeat(24),sessionId:'existing',status:'running'});fs.writeFileSync(path.join(run,'state.json'),state);
+  const file=path.join(w.dist,'manifest.json'),built=JSON.parse(fs.readFileSync(file,'utf8'));
+  built.version='0.4.0';built.packages.codex.version='0.4.0';built.packages.codex.digest='e'.repeat(64);fs.writeFileSync(file,JSON.stringify(built));
+  const cfg=JSON.parse(fs.readFileSync(path.join(w.home,'config.json'),'utf8'));
+  const health={ready:true,protocolVersion:1,archiveSha256:cfg.verifiedArchiveSha256,sourceDigest:original.nativeRevision,instanceId:'same',pluginVersion:original.nativeVersion};
+  const result=install.apply({...options,component:'supervisor'},{readNativeHealth:()=>health});
+  assert.equal(result.receipt.packageVersion,'0.4.0');assert.equal(result.receipt.nativeVersion,original.nativeVersion);
+  assert.equal(result.receipt.nativeSnapshot,original.nativeSnapshot);assert.notEqual(result.receipt.serverDir,original.serverDir);
+  assert.equal(fs.readFileSync(profile,'utf8'),profileBefore);assert.equal(fs.readFileSync(path.join(run,'state.json'),'utf8'),state);
+  assert.throws(()=>install.apply(options),/still live/);
+  const before=fs.readFileSync(path.join(w.codexRoot,'config.toml'),'utf8');
+  assert.throws(()=>install.apply({...options,component:'supervisor'},{readNativeHealth:()=>({...health,sourceDigest:'drift'})}),/identity\/protocol differs/);
+  assert.equal(fs.readFileSync(path.join(w.codexRoot,'config.toml'),'utf8'),before);
+ }finally{cleanup(w.base);}
+});
+
 test('stage prepares candidates during live work without activating registrations or changing the run',()=>{
  const w=workspace();try{
   const runDir=path.join(w.home,'runs','run-'+'a'.repeat(24));fs.mkdirSync(runDir,{recursive:true});

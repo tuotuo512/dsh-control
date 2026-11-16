@@ -4,7 +4,7 @@
 
 让 Codex 指挥本机已安装的 DeepSeek Harness：Codex 保持规划、范围与验收，DeepSeek 执行明确子任务。Desktop 原生对话在前端可见，MCP 断连后仍可读取持久报告。
 
-**0.7.1 Windows 预览版，Node.js 22+，MIT。** 已在 Harness 0.2.2-rc.3 上验证全新原生对话、完全访问下真实 PowerShell 写入/读回及同一会话续聊；其他软件构建、系统及 ACP 完全访问未验证。源码与版本：[tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control)。
+**0.7.2 Windows 预览版，Node.js 22+，MIT。** 已在 Harness 0.2.2-rc.3 上验证全新原生对话、完全访问下真实 PowerShell 写入/读回及同一会话续聊；其他软件构建、系统及 ACP 完全访问未验证。源码与版本：[tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control)。
 
 ## 从源码安装
 
@@ -28,11 +28,11 @@ npm ci 只安装依赖，不安装插件。setup 默认只读，检查本机已�
 
 跨天先读 doctor.bindingsPath 的项目/对话关系笔记，再实时核存在、归档与任务租约。笔记不记聊天内容、进展、待办或全局默认。明确归档/不存在才移除关联并停止发送，查询失败保留。已有任务保留原通道，不为默认偏好中断或重复派发。
 
-默认新任务为前端可见 Desktop、只读；SDK/ACP需要明确选择，失败不静默换通道。写任务显式授予 workspace-write 与 ownedPaths。接收成功、回合完成与任务验收分别判断，未知结果不自动重放。
+插件原样传递调用方消息，不自动添加角色、文件清单、任务模板或施工规则。默认新连接走前端可见 Desktop，权限沿项目设置，未配置则只读；SDK/ACP需明确选择。写入连接默认按整个工作区协调并发，调用方可选传 ownedPaths 分区，它不是业务文件白名单。接收、回合完成与任务验收分别判断，未知结果不自动重放。
 
 ## 维护与公开导出
 
-新增 `dsh_workspace_policy` 按项目保存权限、`dsh_preflight` 零聊天/零模型开工检查，共15个工具。日常 list/status/wait 可传 `compact:true` 缩短回执；简短派工消息引用任务文档。完全访问由作者为准确项目明确保存，未知项目仍只读，已有会话保持原权限；操作见[参考](skill/references/operations.md)。
+共15个连接工具，包括项目权限 workspace_policy 和零聊天/零模型预检 preflight。list/status/wait 可传 compact:true 缩短回执。消息原样传递，任务如何组织由对话决定；未知项目默认只读，已有会话保持原权限。操作见[参考](skill/references/operations.md)。
 
 安装器支持 plan/apply/verify/uninstall；apply要求先setup且受管任务运行时拒绝。卸载保留报告与历史，不重启Desktop Host。源码变更不会自动更新已有安装。
 

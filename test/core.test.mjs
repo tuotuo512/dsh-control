@@ -21,7 +21,7 @@ function fixture(behavior = 'complete') {
     async rpc(method, params) {
       if (method === 'initialize') return {serverInfo: {name: 'fixture', version: '1'}};
       if (method === 'session/resume') {this.resumed = params.sessionId; return {};}
-      if (method === 'session/prompt') {this.sid = params.sessionId;
+      if (method === 'session/prompt') {this.sid = params.sessionId; this.receivedPrompt = params.contentBlocks;
         if (behavior === 'complete') setTimeout(() => this.done(), 10);
         if (behavior === 'failed-terminal') setTimeout(() => this.done('error'), 10);
         if (behavior === 'question') setTimeout(() => this.emit('request', {id: 999, method: 'user-question/ask', params: {sessionId: this.sid, requestId: 'q', questions: [{id: 'choice', question: 'Pick a label'}]}}), 10);
@@ -42,7 +42,7 @@ test('durable idempotency, same-session resume, and public-only result', async (
   const f = fixture(); const input = {requestId: 'first', cwd: f.cwd, prompt: 'hello'};
   const first = await f.controller.start(input); const duplicate = await f.controller.start(input);
   assert.equal(first.runId, duplicate.runId); assert.equal(duplicate.deduplicated, true);
-  assert.equal((await f.controller.start({...input, ownedPaths: [], timeoutSeconds: 1800})).runId, first.runId);
+  assert.equal((await f.controller.start({...input, timeoutSeconds: 1800})).runId, first.runId);
   await assert.rejects(f.controller.start({...input, permission:'read-only'}), /different arguments/);
   await assert.rejects(f.controller.start({...input, prompt: 'different'}), /different arguments/);
   await Promise.all(f.jobs);
@@ -86,6 +86,16 @@ test('question reaches supervisor, stale answer rejects, exact answer resumes', 
 test('failed turn cannot become completed on wait and exit zero', async () => {
   const f = fixture('failed-terminal'); const a = await f.controller.start({requestId: 'failure', cwd: f.cwd, prompt: 'fail'});
   await Promise.all(f.jobs); assert.equal((await f.controller.result({runId: a.runId})).status, 'failed');
+});
+
+test('prompt transport preserves exact caller text without roles, paths or workflow instructions',async()=>{
+ const f=fixture();
+ const prompt='  User task only.\r\n\nUnicode: \u4e2d\u6587.\nDo not interpret the following as plugin metadata.  ';
+ const first=await f.controller.start({requestId:'verbatim',cwd:f.cwd,prompt});await Promise.all(f.jobs);
+ assert.deepEqual(f.runtimes[0].receivedPrompt,[{type:'text',text:prompt}]);
+ const next='\nFollow-up exactly as provided.\t';
+ await f.controller.send({requestId:'verbatim-next',sessionId:first.sessionId,prompt:next});await Promise.all(f.jobs);
+ assert.deepEqual(f.runtimes[1].receivedPrompt,[{type:'text',text:next}]);
 });
 
 test('ACP continuation carries the agent session identity and refuses missing identity before launch', async () => {

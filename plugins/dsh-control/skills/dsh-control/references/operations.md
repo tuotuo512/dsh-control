@@ -53,14 +53,14 @@ desktop_workspaces 的 limit 默认100、范围1..100，offset 默认0且为非�
   "requestId": "task-20261115-owner-a-first",
   "backend": "desktop",
   "cwd": "D:\\some-repository",
-  "title": "定位资源索引的实际 owner",
-  "prompt": "只读定位……。给出实际文件、调用关系、已证实结论和未验证边界。",
+  "title": "连接测试",
+  "prompt": "请只回复 CONNECTED。",
   "permission": "read-only",
   "timeoutSeconds": 1800
 }
 ```
 
-写任务显式添加 `"permission": "workspace-write"` 与 `"ownedPaths": ["D:\\some-repository\\src\\module"]`。ownedPaths 在 cwd 内，防止同时两个任务认领重叠路径；真正隔离并行施工用不同 worktree。
+写入连接可显式指定 `"permission": "workspace-write"`。省略 ownedPaths 时占用整个 cwd 作为并发写入协调范围；需要并行分区时，调用方可选传模块或文件列表。它不是业务文件白名单，插件不会把它拼进模型消息。任务内容、实施方法和授权边界由对话与项目规则提供。
 
 既有原生会话先用 desktop_session 的 JSON 输入（例如 {"sessionId":"actual-native-session-id"}）精确确认存在、归档和状态，再接管：
 

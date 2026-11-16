@@ -68,12 +68,24 @@ test('MCP keeps absent permission absent and accepts project policy and compact 
   await invoke(spy,'preflight',{cwd:'repo'});assert.equal(got.permission,undefined);
   await assert.rejects(invoke(spy,'start',{requestId:'x',cwd:'repo',prompt:'task',permission:'admin'}));
 });
+test('an unpartitioned writer reserves its workspace without forcing a file list',async()=>{
+ const f=fixture();try{
+  const input={requestId:'whole-workspace',cwd:f.cwd,prompt:'Locate and solve the issue.',permission:'workspace-write'};
+  assert.equal((await f.controller.preflight({cwd:f.cwd,permission:'workspace-write'})).ready,true);
+  const first=await f.controller.start(input);assert.deepEqual(first.ownedPaths,[fs.realpathSync.native(f.cwd)]);
+  assert.equal((await f.controller.start(input)).deduplicated,true);
+  await assert.rejects(f.controller.start({...input,ownedPaths:[]}),/different arguments/);
+  await assert.rejects(f.controller.start({...input,requestId:'overlap',ownedPaths:[path.join(f.cwd,'child')]}),/overlaps/);
+  assert.equal(f.launches.length,1);
+ }finally{f.close();}
+});
 test('pre-policy request receipts remain idempotent after upgrade',async()=>{
  const f=fixture();try{
   const input={requestId:'legacy',cwd:f.cwd,prompt:'old assignment'};
   const receipt=await f.controller.start(input);
   const state=loadState(f.home,receipt.runId,false);
   delete state.permissionSource;
+  delete state.promptMode;
   const legacy={operation:'start',...input,cwd:fs.realpathSync.native(f.cwd),backend:'sdk',permission:'read-only',ownedPaths:[],timeoutSeconds:1800};
   state.signature=crypto.createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries(legacy).sort(([a],[b])=>a.localeCompare(b))))).digest('hex');
   saveState(f.home,state);

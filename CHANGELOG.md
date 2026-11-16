@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.2 — Message transport only
+
+- Transmit the caller's prompt verbatim, without automatic role instructions, path lists, task templates, workflow advice or project prohibitions.
+- Keep connection metadata, permissions, coordination reservations and diagnostics separate from model instructions. Writers may reserve the whole project without enumerating implementation files.
+- Reduce the skill to project/session selection, message delivery, permission parameters and result handling.
+- Add an explicit Codex-side-only update path that preserves serving native instances and active workers; record supervisor and native component versions separately.
+
 ## 0.7.1 — Native new-conversation acceptance
 
 - Add an explicitly opt-in, repeatable Desktop acceptance script covering an installed MCP snapshot, real full-access PowerShell write/readback, supervisor questions, reconnect, idempotency and same-session continuation.

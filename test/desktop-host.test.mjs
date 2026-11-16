@@ -8,6 +8,14 @@ function fixture(){const home=fs.mkdtempSync(path.join(os.tmpdir(),'native-host-
  const input={runId:'run-'+'a'.repeat(24),requestId:'request',sessionId:'session-fixture',cwd:home,title:'Fixture title',permission:'workspace-write',ownedPaths:[path.join(home,'file.txt')],provider:'p',model:'m',timeoutSeconds:60};
  return{home,ctx,controller,input,calls,agents,make,bus,close:async()=>{await controller.close();fs.rmSync(home,{recursive:true,force:true});}};}
 const blocks=[{type:'text',text:'fixture'}];
+test('native delivery keeps the caller text separate from connection metadata',async()=>{
+ const f=fixture();try{
+  await f.controller.open(f.input);
+  const content=[{type:'text',text:'  Caller message\r\n\n\tNo generated role or task wrapper.  '}];
+  await f.controller.prompt({runId:f.input.runId,contentBlocks:content});
+  assert.deepEqual(f.calls.find(c=>c[0]==='prompt')[1].content,content);
+ }finally{await f.close();}
+});
 test('native full access follows actual catalog and readback; task scope still rejects overlaps',async()=>{
  const f=fixture();try{
   const selected=new Map();

@@ -49,7 +49,7 @@ export function createController({home = defaultHome(), launch = launchWorker, i
     const cfg = config(home); const runtime = inspect(cfg);
     let desktop; if((cfg.defaultBackend??'sdk')==='desktop'){try{desktop=await new DesktopClient(home).health();}catch(e){desktop={ready:false,error:e.message};}}
     return {ready: runtime.compatible && (desktop===undefined||desktop.ready!==false), defaultBackend:cfg.defaultBackend??'sdk', backends:['sdk','desktop','acp'], acp:{profile:cfg.acpProfile||'acp', interactiveQuestions:false}, desktop, runtime, stateDirectory: home, bindingsPath:bindingsPath(home), maxParallel: cfg.maxParallel,
-      communication: {directToolResults: true, durableMarkdown: true, wakeEndedCodexChat: false}};
+      communication: {directToolResults: true, durableMarkdown: true, wakeEndedCodexChat: false, promptMode:'verbatim'}};
   }
   function view(state, compact = false) {
     const value = snapshot(home, state);
@@ -66,7 +66,7 @@ export function createController({home = defaultHome(), launch = launchWorker, i
     const backend = input.backend ?? cfg.defaultBackend ?? 'sdk';
     if (!['desktop','sdk','acp'].includes(backend)) throw new Error('Invalid backend');
     if (input.workspaceId && backend !== 'desktop') throw new Error('workspaceId requires the desktop backend');
-    const ownedPaths = (input.ownedPaths ?? []).map(canonical), blockers = [];
+    const ownedPaths = (input.ownedPaths ?? (isWriter(permission) ? [policy.cwd] : [])).map(canonical), blockers = [];
     if (isWriter(permission) && !ownedPaths.length) blockers.push('write_permission_requires_ownedPaths');
     if (ownedPaths.some(p => !contains(policy.cwd, p))) blockers.push('ownedPaths_outside_workspace');
     if (backend === 'acp' && permission === 'danger-full-access') blockers.push('acp_full_access_unverified');
@@ -106,15 +106,15 @@ export function createController({home = defaultHome(), launch = launchWorker, i
     // Canonical input identity includes the operation and all explicit arguments.
     const chosenBackend=input.backend??config(home).defaultBackend??'sdk';if(!['sdk','desktop','acp'].includes(chosenBackend))throw Error('Invalid backend');
     if(!continuation&&input.workspaceId!==undefined){id(input.workspaceId,'workspaceId');if(chosenBackend!=='desktop')throw Error('workspaceId requires the desktop backend');}
-    const normalized = continuation ? {...input} : {...input, backend:chosenBackend, cwd: canonical(string(input.cwd, 'cwd')), permission: input.permission ?? 'project-default', ownedPaths: input.ownedPaths || [], timeoutSeconds: input.timeoutSeconds ?? 1800};
+    const normalized = continuation ? {...input} : {...input, backend:chosenBackend, cwd: canonical(string(input.cwd, 'cwd')), permission: input.permission ?? 'project-default', ownedPaths: input.ownedPaths ?? null, timeoutSeconds: input.timeoutSeconds ?? 1800};
     const signature = crypto.createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries({operation: continuation ? 'send' : 'start', ...normalized}).sort(([a], [b]) => a.localeCompare(b))))).digest('hex');
     return locked(home, async () => {
       const file = path.join(runDir(home, runId), 'state.json');
       if (fs.existsSync(file)) {
         const existing = loadState(home, runId);
-        const legacy = !continuation && existing.permissionSource === undefined
-          ? crypto.createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries({operation:'start',...normalized,permission:input.permission || 'read-only'}).sort(([a],[b])=>a.localeCompare(b))))).digest('hex') : undefined;
-        if (existing.signature !== signature && existing.signature !== legacy) throw new Error('requestId already used with different arguments');
+        const legacy = !continuation && existing.promptMode !== 'verbatim'
+          ? [input.permission ?? 'project-default', input.permission || 'read-only'].map(permission => crypto.createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries({operation:'start',...normalized,permission,ownedPaths:input.ownedPaths??[]}).sort(([a],[b])=>a.localeCompare(b))))).digest('hex')) : [];
+        if (existing.signature !== signature && !legacy.includes(existing.signature)) throw new Error('requestId already used with different arguments');
         return {...view(existing), deduplicated: true};
       }
       const cfg = config(home); const runtime = inspect(cfg);
@@ -160,7 +160,7 @@ export function createController({home = defaultHome(), launch = launchWorker, i
         const health = await native.health();
         if (!health.permissionPresets?.includes(permission)) throw new Error('Desktop plugin does not advertise danger-full-access; update it after active runs finish');
       }
-      const ownedPaths = base?.ownedPaths || (input.ownedPaths || []).map(p => canonical(string(p, 'ownedPath')));
+      const ownedPaths = base?.ownedPaths ?? (input.ownedPaths ?? (isWriter(permission) ? [cwd] : [])).map(p => canonical(string(p, 'ownedPath')));
       if (isWriter(permission) && ownedPaths.length === 0) throw new Error('Write permission requires explicit ownedPaths');
       if (ownedPaths.some(p => !contains(cwd, p))) throw new Error('Every ownedPath must be inside the canonical cwd');
       if (isWriter(permission)) for (const other of live.filter(s => isWriter(s.permission))) {
@@ -170,7 +170,7 @@ export function createController({home = defaultHome(), launch = launchWorker, i
       const state = {schemaVersion: 1, backend, runId, requestId: input.requestId, signature,
         sessionId: base?.sessionId || 'session-' + crypto.randomUUID(), resume: Boolean(base), previousRunId: base?.runId,
         ...(backend==='acp'&&base?{acpSessionId:base.acpSessionId}:{}),
-        cwd, ...(workspaceId?{workspaceId,workspaceTitle}:{}), permission, permissionSource, ownedPaths, prompt: input.prompt, title: input.title || (base ? base.title : 'DSH delegated task'),
+        cwd, ...(workspaceId?{workspaceId,workspaceTitle}:{}), permission, permissionSource, ownedPaths, promptMode:'verbatim', prompt: input.prompt, title: input.title || (base ? base.title : 'DSH delegated task'),
         provider: base?.provider || cfg.provider, model: base?.model || cfg.model, reasoningEffort: base?.reasoningEffort || cfg.reasoningEffort,
         timeoutSeconds, runtime, runtimeConfig: cfg, status: 'starting', createdAt: new Date().toISOString(),
         runtimeOwnership: 'not-started', eventCursor: 0, messages: [], tools: []};
@@ -261,7 +261,7 @@ export function createController({home = defaultHome(), launch = launchWorker, i
   }
   async function adopt(input){
     string(input.requestId,'requestId');id(input.sessionId,'sessionId');
-    const args={requestId:input.requestId,sessionId:input.sessionId,...(input.permission === undefined ? {} : {permission:checkPermission(input.permission)}),ownedPaths:(input.ownedPaths??[]).map(canonical),timeoutSeconds:integer(input.timeoutSeconds,1800,5,14400,'timeoutSeconds')};
+    const args={requestId:input.requestId,sessionId:input.sessionId,...(input.permission === undefined ? {} : {permission:checkPermission(input.permission)}),...(input.ownedPaths === undefined ? {} : {ownedPaths:input.ownedPaths.map(canonical)}),timeoutSeconds:integer(input.timeoutSeconds,1800,5,14400,'timeoutSeconds')};
     const runId='run-'+crypto.createHash('sha256').update(input.requestId).digest('hex').slice(0,24),signature=crypto.createHash('sha256').update(JSON.stringify({operation:'adopt',...args})).digest('hex');
     return locked(home,async()=>{
       const file=path.join(runDir(home,runId),'state.json');if(fs.existsSync(file)){const old=loadState(home,runId);if(old.signature!==signature)throw Error('requestId already used with different arguments');return {...view(old),deduplicated:true};}
@@ -269,12 +269,13 @@ export function createController({home = defaultHome(), launch = launchWorker, i
       const peers=allStates(home).filter(s=>!terminal.has(s.status)||s.leaseHeld);
       const c=new DesktopClient(home);const h=await c.health();if(h.archiveSha256!==config(home).verifiedArchiveSha256)throw Error('Desktop fingerprint mismatch');const checked=await inspectNativeSession(c,input.sessionId);await refreshBinding(home,checked);requireSendable(checked);
       const policy=workspacePolicy(home,checked.cwd),permission=checkPermission(input.permission??policy.permission);
-      if(isWriter(permission)&&!args.ownedPaths.length)throw Error('Write permission requires explicit ownedPaths');
-      if(args.ownedPaths.some(p=>!contains(policy.cwd,p)))throw Error('Every ownedPath must be inside canonical cwd');
+      const reservations=args.ownedPaths??(isWriter(permission)?[policy.cwd]:[]);
+      if(isWriter(permission)&&!reservations.length)throw Error('Write permission requires a nonempty coordination reservation');
+      if(reservations.some(p=>!contains(policy.cwd,p)))throw Error('Every ownedPath must be inside canonical cwd');
       if(permission==='danger-full-access'&&!h.permissionPresets?.includes(permission))throw Error('Desktop plugin does not advertise danger-full-access');
-      if(isWriter(permission)&&peers.some(s=>isWriter(s.permission)&&s.ownedPaths.some(a=>args.ownedPaths.some(b=>overlaps(a,b)))))throw Error('Write ownership overlaps active run');
-      const state={schemaVersion:1,runId,signature,...args,permission,permissionSource:input.permission===undefined?policy.source:'explicit',backend:'desktop',status:'starting',runtimeOwnership:'launching',leaseHeld:true,createdAt:new Date().toISOString(),messages:[],tools:[],eventCursor:0,runtimeConfig:config(home)};saveState(home,state);
-      try{const native=await c.call('adopt',{...args,permission:state.permission});const cwd=canonical(native.cwd);if(args.ownedPaths.some(p=>!contains(cwd,p)))throw Error('Every ownedPath must be inside canonical cwd');Object.assign(state,native,{status:'attached',runtimeOwnership:'released',leaseHeld:false,note:'Attached idle native session. No prompt submitted; no work executed.'});saveState(home,state);await recordBinding(home,{...state,workspaceTitle:checked.workspaceTitle});return view(state);}catch(e){if(['DSH_SESSION_ARCHIVED','DSH_SESSION_NOT_FOUND'].includes(e.code))await refreshBinding(home,{sessionId:input.sessionId,exists:e.code!=='DSH_SESSION_NOT_FOUND',archived:e.code==='DSH_SESSION_ARCHIVED'});state.status=e.noEffects===true?'failed':'interrupted';state.leaseHeld=e.noEffects!==true;state.runtimeOwnership=e.noEffects===true?'released':'owned';state.error=e.message;state.errorCode=e.code;state.httpStatus=e.status;saveState(home,state);throw e;}
+      if(isWriter(permission)&&peers.some(s=>isWriter(s.permission)&&s.ownedPaths.some(a=>reservations.some(b=>overlaps(a,b)))))throw Error('Write ownership overlaps active run');
+      const state={schemaVersion:1,runId,signature,...args,ownedPaths:reservations,permission,permissionSource:input.permission===undefined?policy.source:'explicit',backend:'desktop',status:'starting',runtimeOwnership:'launching',leaseHeld:true,createdAt:new Date().toISOString(),messages:[],tools:[],eventCursor:0,runtimeConfig:config(home)};saveState(home,state);
+      try{const native=await c.call('adopt',{...args,ownedPaths:reservations,permission:state.permission});const cwd=canonical(native.cwd);if(reservations.some(p=>!contains(cwd,p)))throw Error('Every ownedPath must be inside canonical cwd');Object.assign(state,native,{status:'attached',runtimeOwnership:'released',leaseHeld:false,note:'Attached idle native session. No prompt submitted; no work executed.'});saveState(home,state);await recordBinding(home,{...state,workspaceTitle:checked.workspaceTitle});return view(state);}catch(e){if(['DSH_SESSION_ARCHIVED','DSH_SESSION_NOT_FOUND'].includes(e.code))await refreshBinding(home,{sessionId:input.sessionId,exists:e.code!=='DSH_SESSION_NOT_FOUND',archived:e.code==='DSH_SESSION_ARCHIVED'});state.status=e.noEffects===true?'failed':'interrupted';state.leaseHeld=e.noEffects!==true;state.runtimeOwnership=e.noEffects===true?'released':'owned';state.error=e.message;state.errorCode=e.code;state.httpStatus=e.status;saveState(home,state);throw e;}
     });
   }
   return {workspace_policy, preflight, desktop_workspaces,desktop_session,desktop_sessions, adopt, doctor, start, send, status, result, list, wait, respond, cancel};

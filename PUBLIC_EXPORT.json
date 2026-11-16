@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "0.7.1",
+  "version": "0.7.2",
   "files": [
     {
       "path": ".agents/plugins/marketplace.json",
@@ -24,7 +24,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "40dee4b3fe6150d52da1924f12b26f6750805d74b08d054b9db55689a63b5001"
+      "sha256": "e9f89f6fd10dd38c5dabc9f9f796a7a3a277520e20132e8913b0b81740c14335"
     },
     {
       "path": "compatibility.json",
@@ -32,19 +32,19 @@
     },
     {
       "path": "docs/COMPATIBILITY.md",
-      "sha256": "528bf848e748b920cd7cb79fd17ba4d50517ff84d28a3a7d5ea2d77719b3ccb2"
+      "sha256": "edebb73b032f6cdc8c029505748798a6e81c2e1759ee6489258aa8d8ec0a95d8"
     },
     {
       "path": "docs/contract.md",
-      "sha256": "e87a9b60e45f5bae76985c6d5a62593ad0aa9a07a09549f2aa521f99485db828"
+      "sha256": "63f8db5e8435c0a4947a1abe01916dadbf3726d8677f3fb17ccab245bfd0487f"
     },
     {
       "path": "docs/INSTALL.md",
-      "sha256": "732d4c236a8267511dcfe46a54367e052f8f4cd9e1e3f348345d3ca9a256ded4"
+      "sha256": "10e76d76c25f62e075ef8adb5626b6c6ea4f4ea67af51499ebc9ee944c57cbed"
     },
     {
       "path": "docs/INSTALL.zh-CN.md",
-      "sha256": "c5d36304e4aa98b970a101c2e30e7a5ddad63882875f0023b61f5dedb5810e3e"
+      "sha256": "e91ef6707cce56537c61f365d7c8cddae5ee010fcd7dc3ce732d546be6830a21"
     },
     {
       "path": "docs/RELEASING.md",
@@ -60,15 +60,15 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "79bc8a8dcdc835de0b514d53c582164eb8263e9e10b1cb79e5abdbdedafde1ac"
+      "sha256": "07cb73311361d4d32932b96eb1b462292254fa7a5b6f12a4130e4d289381828f"
     },
     {
       "path": "package.json",
-      "sha256": "c2abb32606ba69fe403c25e3eeb5edcdf21fd805e823a09f1b3b3d67f08511ca"
+      "sha256": "9bce3867d12bf6ad878fcd7bdc62e7117972ff314aa5264366170219f335eb96"
     },
     {
       "path": "packages/codex-plugin/.codex-plugin/plugin.json",
-      "sha256": "3a468f016c689a313292bfec55bd80b9ca160f60a7542496b2baaaf01f666290"
+      "sha256": "c08a2b961df82f46813cc5421194decc77f9cbf3fbcf94b0e53bc97eeabfc275"
     },
     {
       "path": "packages/codex-plugin/mcp.template.json",
@@ -76,11 +76,11 @@
     },
     {
       "path": "packages/codex-plugin/package.json",
-      "sha256": "0eb4187f50b2d870347ba412a45f4fbaf2d898f97f134a392d588663251b61d8"
+      "sha256": "f8db45140b01603ac14891f77bfd50f317676a18b08b4e17dc0545c9dc8ff41d"
     },
     {
       "path": "packages/codex-plugin/plugin.json",
-      "sha256": "26b64af401a6d55e5e8df156fccfb7b9a104d2a04443070dfde59d01a9301e3f"
+      "sha256": "57f9b2438ebbfad04e879358d66d9dd0948c03de2f1969df4879cdc36306a22e"
     },
     {
       "path": "packages/dsh-plugin/cordis.patch.yml",
@@ -92,7 +92,7 @@
     },
     {
       "path": "packages/dsh-plugin/package.json",
-      "sha256": "3865a6ec31af183445450726877da0789707b36b134b4419c5c244d1d4e9d6f1"
+      "sha256": "f9637521e185d42a5d0ac819dad5dace94cf7b2a016ebbc8b63dbcdf3c6d5c07"
     },
     {
       "path": "packages/dsh-plugin/README.md",
@@ -100,31 +100,31 @@
     },
     {
       "path": "plugins/dsh-control/.codex-plugin/plugin.json",
-      "sha256": "3a468f016c689a313292bfec55bd80b9ca160f60a7542496b2baaaf01f666290"
+      "sha256": "c08a2b961df82f46813cc5421194decc77f9cbf3fbcf94b0e53bc97eeabfc275"
     },
     {
       "path": "plugins/dsh-control/plugin.json",
-      "sha256": "26b64af401a6d55e5e8df156fccfb7b9a104d2a04443070dfde59d01a9301e3f"
+      "sha256": "57f9b2438ebbfad04e879358d66d9dd0948c03de2f1969df4879cdc36306a22e"
     },
     {
       "path": "plugins/dsh-control/skills/dsh-control/agents/openai.yaml",
-      "sha256": "55218f017ce7c10b8c54a455b67961e41bd4aad57233a4e6e63918b1b9a74c74"
+      "sha256": "2d1ea5caa296a5053f76df41fe72eae6c031576a2baed5153fd79651857f4c60"
     },
     {
       "path": "plugins/dsh-control/skills/dsh-control/references/operations.md",
-      "sha256": "c807c76c08f63ac761ed59263a49e25aed628b9707b05d8ddd93c7114285e3ec"
+      "sha256": "142b268992df8b5306563d4449167f6584c2af2d353a1bfa9517569db6462128"
     },
     {
       "path": "plugins/dsh-control/skills/dsh-control/SKILL.md",
-      "sha256": "1444e76489389b8ae2301d44872d514e20d31ed976033e194fd200e27b5351a9"
+      "sha256": "fb2d88f6ff3b55e194b26a8dc23baa3e5e3f8c1ab7cde2e4e7696c2be4707021"
     },
     {
       "path": "README.md",
-      "sha256": "0bdc99dc4bf23d3134b3fd2169ed7a6c66f76211949a6ef2d12dffadf56a125e"
+      "sha256": "ee535d830b6516880e12d816705c0ccee20f38270a93e70065d2d99a0830d411"
     },
     {
       "path": "README.zh-CN.md",
-      "sha256": "50768b326a6f6e5c170d086e6e8754f5dbdb7fa56fce84119f6e2f1bb3df71c8"
+      "sha256": "5ce8cb46ff946af912a7d57a0db09ae3882b007a27eb6fb7bcd904b05bbb8ff9"
     },
     {
       "path": "scripts/build.mjs",
@@ -136,7 +136,7 @@
     },
     {
       "path": "scripts/install.mjs",
-      "sha256": "b072463eed40262d770d5c6f1eb863c4bfe3cdcfcc44d894f9050c8295109d45"
+      "sha256": "ade09e52e7653548c6a439094ebbc548b6dc414be8d43f4ad1f857543ff94e8c"
     },
     {
       "path": "scripts/public-release.mjs",
@@ -144,15 +144,15 @@
     },
     {
       "path": "skill/agents/openai.yaml",
-      "sha256": "55218f017ce7c10b8c54a455b67961e41bd4aad57233a4e6e63918b1b9a74c74"
+      "sha256": "2d1ea5caa296a5053f76df41fe72eae6c031576a2baed5153fd79651857f4c60"
     },
     {
       "path": "skill/references/operations.md",
-      "sha256": "c807c76c08f63ac761ed59263a49e25aed628b9707b05d8ddd93c7114285e3ec"
+      "sha256": "142b268992df8b5306563d4449167f6584c2af2d353a1bfa9517569db6462128"
     },
     {
       "path": "skill/SKILL.md",
-      "sha256": "1444e76489389b8ae2301d44872d514e20d31ed976033e194fd200e27b5351a9"
+      "sha256": "fb2d88f6ff3b55e194b26a8dc23baa3e5e3f8c1ab7cde2e4e7696c2be4707021"
     },
     {
       "path": "src/acp-client.mjs",
@@ -168,7 +168,7 @@
     },
     {
       "path": "src/controller.mjs",
-      "sha256": "c333a92362cc7f2a6b6697d1732e2b8b8144526268648caae63d91ad7d461113"
+      "sha256": "15019001ed4fda4fb4e621ff344329cfbcb8694125e23afd40d067f11c7ff3af"
     },
     {
       "path": "src/desktop-client.mjs",
@@ -176,7 +176,7 @@
     },
     {
       "path": "src/desktop-host.mjs",
-      "sha256": "1bb8fdaa22e161b3a5e7f77ab0f131c5767846de2c8960a0a06a56d6fd8b0cce"
+      "sha256": "0bf34611fa2f3f79f810be5652ec6d29bef650ba8521a5cab5910f45432f59c5"
     },
     {
       "path": "src/desktop-plugin.mjs",
@@ -184,7 +184,7 @@
     },
     {
       "path": "src/mcp.mjs",
-      "sha256": "0bdcb0accfadcd60fcc60867f6f17e482896a878ad17b179ffc1effd0fb8dfc5"
+      "sha256": "d5b4956195f43b734817041327fe7f579f89d79842257f2c86e9c2683ccfa6e4"
     },
     {
       "path": "src/permissions.mjs",
@@ -208,7 +208,7 @@
     },
     {
       "path": "src/worker.mjs",
-      "sha256": "b7cea106eea37da1fb2d2e4f7e43ea79c57a667ea20980ea9ee33db19b2c81ca"
+      "sha256": "75809fe1761606b40f62d431b8792363546dfcdd939c331af622710883f0073b"
     },
     {
       "path": "test/acp.test.mjs",
@@ -220,7 +220,7 @@
     },
     {
       "path": "test/core.test.mjs",
-      "sha256": "bb6679fcf6e2cb3b5ae85e2715ceb3f4e41b88ccb4e9ee9a8b2ad509020c619e"
+      "sha256": "ce9c06a2804281dbc7b01d9d34047a2f078a96232b2fa484491a970d6b463547"
     },
     {
       "path": "test/desktop-client.test.mjs",
@@ -228,7 +228,7 @@
     },
     {
       "path": "test/desktop-host.test.mjs",
-      "sha256": "df0402815a44f358e605bf87faf30fc530ca01d7f3332b11d29555ccab4507f5"
+      "sha256": "ef2160fd30dafb08b512bbbed27583f42d4d373babc60287fa8606bdf7f703b0"
     },
     {
       "path": "test/fixtures/fake-acp-server.mjs",
@@ -244,7 +244,7 @@
     },
     {
       "path": "test/install.test.mjs",
-      "sha256": "9d3130e40ccd12fd6e45d51577bcd4aac3a07dbe08b21e5dc3183d090f105f80"
+      "sha256": "2c64f5a47235fe861fa554d2c76f9e75621a34843fd0c4b1e39efda1cf0b4c1d"
     },
     {
       "path": "test/live.mjs",
@@ -252,7 +252,7 @@
     },
     {
       "path": "test/native-permissions-live.mjs",
-      "sha256": "7178dfbe0e20e9dbdb50eff02a649938e5fec0492139109c59863d6f670322e4"
+      "sha256": "1e9aa584d2801f0bdc7a9e3b90ea68e610259d8453dc18a92f6ae03bcd2b7031"
     },
     {
       "path": "test/package.test.mjs",
@@ -260,11 +260,11 @@
     },
     {
       "path": "test/permissions.test.mjs",
-      "sha256": "139583b4f795a9de74a45f621262e30dacbff23951099a728d5725a82a27f0b0"
+      "sha256": "3b447e480fdc84c50ea1dc56cb824acc0dbfb9f317857dd6c0f9809b51b0d700"
     },
     {
       "path": "test/public-release.test.mjs",
-      "sha256": "0be1c79111cd3bf9dfe3aa9d3f924fea162bda70147e0b971f665754b71c477c"
+      "sha256": "62fac0cab9a19b2121f0e4e19bd71e73f7c9d02269849268d8246a0f09bfb589"
     },
     {
       "path": "test/reconnect.test.mjs",

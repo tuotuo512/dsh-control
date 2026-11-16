@@ -33,4 +33,6 @@ apply必须先setup；任务仍运行或租约未释放时拒绝，不要为安�
 
 任务忙时可先用 `npm run install:plugin -- stage`，复制并校验不可变候选，不改注册、不动当前任务；全部受管任务释放租约后再 apply 和 verify。stage 不是启用，也不会偷偷安排自动更新。
 
-项目权限与关系笔记分开。用准确 cwd 读取 workspace_policy，再明确保存 permission 与 expectedRevision。支持 read-only、workspace-write、danger-full-access（无沙箱、无审批提示）；start/adopt 省略权限时沿用该项目设置，已有会话保持原权限。完全访问仍需声明 ownedPaths，不授权系统/目录权限修复。新任务先用 preflight，日常 list/status/wait 用 compact:true。预检不建聊天、不调用模型，命令执行未实测会标记 not_probed。JSON 示例见[操作参考](../skill/references/operations.md)。
+项目权限与关系笔记分开。用准确 cwd 读取 workspace_policy，再保存 permission 与 expectedRevision。支持 read-only、workspace-write、danger-full-access（无沙箱、无审批提示）；start/adopt 省略权限时沿用项目设置，已有会话保持原权限。写入连接默认按整个工作区协调并发，可选传 ownedPaths 分区；这些元数据不会加进模型消息。预检不建聊天、不调用模型，命令未实测会标记 not_probed。示例见[操作参考](../skill/references/operations.md)。
+
+只修改 Codex 侧服务/技能且兼容当前原生协议时，可用 `npm run install:plugin -- apply --component supervisor`。它保留原生配置/实例与已有 worker，前后核身份，收据分别记录两侧版本。完整原生更新仍等待受管任务结束。

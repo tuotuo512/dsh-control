@@ -32,12 +32,12 @@ const descriptions = {
  desktop_sessions:'List native sessions without adopting or prompting.',
  adopt:'Explicitly attach an idle native session without sending a prompt.',
  doctor:'Inspect installed DSH runtime, configuration and readiness without exposing credentials.',
- start:'Start a managed run. Omitted permission uses the saved project policy, otherwise read-only. Both write modes require ownedPaths. requestId prevents duplicate work. Acceptance is not completion.',
+ start:'Send the caller prompt unchanged to a new managed session. Permission uses the explicit value or project policy. Writers reserve the workspace unless ownedPaths is supplied. requestId prevents duplicate delivery.',
  send:'Continue a managed or explicitly adopted session after its previous run releases ownership. A caller requestId prevents duplicate submission.',
  status:'Read a managed run and bounded public events after a cursor. Provider reasoning is excluded.',
- result:'Read bounded public output and durable report path. Supervisor must review files and tests separately.',
+ result:'Read bounded public output, tool summaries and the durable report path. Completion is the run state, not task acceptance.',
  list:'List recent managed runs, including runs surviving MCP disconnect.',
- wait:'Wait up to 30 seconds for completion, input, approval, or public events beyond supplied cursors. Continue monitoring until terminal state or explicit handoff.',
+ wait:'Wait up to 30 seconds for completion, input, approval, or public events beyond supplied cursors.',
  respond:'Answer the exact pending question or approval request explicitly. Stale pending identities are rejected.',
  cancel:'Cancel the managed run only. SDK requires child exit; Desktop requires native quiescence and lease release, never Host process exit.'
 };
@@ -46,7 +46,7 @@ export async function invoke(controller, operation, input) {
  return controller[operation](schemas[operation].parse(input));
 }
 export function createServer(controller) {
-  const server = new McpServer({name:'local-dsh-control',version:'0.7.1'});
+  const server = new McpServer({name:'local-dsh-control',version:'0.7.2'});
  for (const [operation,schema] of Object.entries(schemas)) {
   server.registerTool(`dsh_${operation}`,{description:descriptions[operation],inputSchema:schema},async input=>{
    try {const value=await invoke(controller,operation,input); return {structuredContent:value,content:[{type:'text',text:JSON.stringify(value,null,2)}]};}

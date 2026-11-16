@@ -4,7 +4,7 @@
 
 Let Codex delegate bounded tasks to your locally installed DeepSeek Harness. Codex keeps planning and acceptance; DeepSeek executes assigned work. Native Desktop sessions remain visible in DeepSeek Harness, while durable reports survive MCP reconnects.
 
-**0.7.1 Windows preview · Node.js 22+ · MIT.** Tested with DeepSeek Harness 0.2.2-rc.3, including a new native Desktop conversation, real full-access PowerShell write/readback and same-session continuation. Other application builds, operating systems and ACP full access remain unverified. Source and releases: [tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control).
+**0.7.2 Windows preview · Node.js 22+ · MIT.** Tested with DeepSeek Harness 0.2.2-rc.3, including a new native Desktop conversation, real full-access PowerShell write/readback and same-session continuation. Other application builds, operating systems and ACP full access remain unverified. Source and releases: [tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control).
 
 ## Install from source
 
@@ -24,7 +24,7 @@ npm run install:plugin -- verify
 
 ## Work by project
 
-The fifteen tools are `dsh_doctor`, `dsh_preflight`, `dsh_workspace_policy`, `dsh_start`, `dsh_send`, `dsh_status`, `dsh_result`, `dsh_list`, `dsh_wait`, `dsh_respond`, `dsh_cancel`, `dsh_desktop_workspaces`, `dsh_desktop_session`, `dsh_desktop_sessions`, and `dsh_adopt`. CLI operations use the same names without `dsh_` and the same controller. Save a permission per project, preflight before starting, and use compact monitoring to reduce repeated output; see [operations](skill/references/operations.md).
+The fifteen tools are `dsh_doctor`, `dsh_preflight`, `dsh_workspace_policy`, `dsh_start`, `dsh_send`, `dsh_status`, `dsh_result`, `dsh_list`, `dsh_wait`, `dsh_respond`, `dsh_cancel`, `dsh_desktop_workspaces`, `dsh_desktop_session`, `dsh_desktop_sessions`, and `dsh_adopt`. CLI operations use the same names without `dsh_` and the same controller. Messages are transmitted unchanged; the plugin does not add roles, file lists, task templates or working rules. See [operations](skill/references/operations.md).
 
 List native workspaces, choose the project, then reuse its relevant conversation. A Desktop start requires `cwd` and may specify `workspaceId`; their canonical paths must match. Unknown identities reject rather than creating a replacement. Only create a conversation when requested or needed for independent delegated work. Busy or unknown state is not permission to duplicate work.
 
@@ -36,7 +36,7 @@ node src/cli.mjs desktop_workspaces
 node src/cli.mjs start --input C:/work/task.json
 ```
 
-Default new work uses the frontend-visible Desktop backend and a saved exact-project permission, otherwise read-only. SDK and ACP are explicit alternatives, never silent fallbacks. Both write modes require explicit `ownedPaths`; this coordinates ownership, while only workspace-write retains the workspace sandbox. Full access disables sandboxing and approval prompts without expanding the assigned task. Acceptance is not completion: inspect reports and actual changes. Unknown submissions are never automatically replayed. See [operations](skill/references/operations.md).
+Default new connections use the frontend-visible Desktop backend and a saved exact-project permission, otherwise read-only. SDK and ACP are explicit alternatives, never silent fallbacks. Writers reserve the workspace unless the caller supplies a narrower ownedPaths partition for coordination; these reservations are not implementation instructions. Full access disables sandboxing and approval prompts. Delivery, run completion and task acceptance are distinct. Unknown submissions are not automatically replayed.
 
 ## Maintain and publish
 
