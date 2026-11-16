@@ -4,7 +4,7 @@
 
 Let Codex delegate bounded tasks to your locally installed DeepSeek Harness. Codex keeps planning and acceptance; DeepSeek executes assigned work. Native Desktop sessions remain visible in DeepSeek Harness, while durable reports survive MCP reconnects.
 
-**0.7.0 Windows preview · Node.js 22+ · MIT.** Existing Desktop/SDK integration was tested with DeepSeek Harness 0.2.2-rc.3; the new permission and fast-path contracts have model-free coverage. Real full-access execution, other application builds and operating systems are unverified. Source and releases: [tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control).
+**0.7.1 Windows preview · Node.js 22+ · MIT.** Tested with DeepSeek Harness 0.2.2-rc.3, including a new native Desktop conversation, real full-access PowerShell write/readback and same-session continuation. Other application builds, operating systems and ACP full access remain unverified. Source and releases: [tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control).
 
 ## Install from source
 

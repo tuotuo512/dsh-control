@@ -4,7 +4,7 @@
 
 让 Codex 指挥本机已安装的 DeepSeek Harness：Codex 保持规划、范围与验收，DeepSeek 执行明确子任务。Desktop 原生对话在前端可见，MCP 断连后仍可读取持久报告。
 
-**0.7.0 Windows 预览版，Node.js 22+，MIT。** 既有桌面/SDK 链路验证过 Harness 0.2.2-rc.3，新权限与快捷流程通过不调用模型的测试；真实完全访问执行、其他软件构建与系统未验证。源码与版本：[tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control)。
+**0.7.1 Windows 预览版，Node.js 22+，MIT。** 已在 Harness 0.2.2-rc.3 上验证全新原生对话、完全访问下真实 PowerShell 写入/读回及同一会话续聊；其他软件构建、系统及 ACP 完全访问未验证。源码与版本：[tuotuo512/dsh-control](https://github.com/tuotuo512/dsh-control)。
 
 ## 从源码安装
 

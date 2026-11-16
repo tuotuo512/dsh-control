@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1 — Native new-conversation acceptance
+
+- Add an explicitly opt-in, repeatable Desktop acceptance script covering an installed MCP snapshot, real full-access PowerShell write/readback, supervisor questions, reconnect, idempotency and same-session continuation.
+- Verify that project-policy reset does not change an existing session and that the relationship note survives reconnect.
+- Record the bounded Windows native acceptance scope; no blanket claim about other Harness builds, SDK full-access execution or ACP support.
+- Release preparation and local activation remain separate; no installation or model calls run during npm test.
+
 ## 0.7.0 — Project permissions and faster supervision
 
 - Save an explicit default permission for each canonical project, including native full access; new tasks may inherit it while existing sessions keep their original assignment.

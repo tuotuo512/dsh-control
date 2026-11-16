@@ -46,7 +46,7 @@ export async function invoke(controller, operation, input) {
  return controller[operation](schemas[operation].parse(input));
 }
 export function createServer(controller) {
-  const server = new McpServer({name:'local-dsh-control',version:'0.7.0'});
+  const server = new McpServer({name:'local-dsh-control',version:'0.7.1'});
  for (const [operation,schema] of Object.entries(schemas)) {
   server.registerTool(`dsh_${operation}`,{description:descriptions[operation],inputSchema:schema},async input=>{
    try {const value=await invoke(controller,operation,input); return {structuredContent:value,content:[{type:'text',text:JSON.stringify(value,null,2)}]};}

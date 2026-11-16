@@ -2,7 +2,7 @@
 
 Owner: this standalone infrastructure; Codex retains planning, scope, review and final decisions. DSH is an explicitly assigned worker. User trigger: “你来指挥 DSH / DeepSeek / DeepSeek Harness 工作”.
 
-Public source release 0.7.0 is a Windows preview. Installation is documented in [INSTALL](INSTALL.md), with supported scope in [COMPATIBILITY](COMPATIBILITY.md).
+Public source release 0.7.1 is a Windows preview. Installation is documented in [INSTALL](INSTALL.md), with supported scope in [COMPATIBILITY](COMPATIBILITY.md).
 
 ## Distribution and lifecycle
 

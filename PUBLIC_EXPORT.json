@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "0.7.0",
+  "version": "0.7.1",
   "files": [
     {
       "path": ".agents/plugins/marketplace.json",
@@ -24,7 +24,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "91af50f879e4b97a8c9cd82b0b59cd368e06bfab9122d9b5cb456782fe8ec4e2"
+      "sha256": "40dee4b3fe6150d52da1924f12b26f6750805d74b08d054b9db55689a63b5001"
     },
     {
       "path": "compatibility.json",
@@ -32,11 +32,11 @@
     },
     {
       "path": "docs/COMPATIBILITY.md",
-      "sha256": "19390d5342988994ce09f06db5dba5a2cd66625cfba4ddc888714328c3584e1b"
+      "sha256": "528bf848e748b920cd7cb79fd17ba4d50517ff84d28a3a7d5ea2d77719b3ccb2"
     },
     {
       "path": "docs/contract.md",
-      "sha256": "37869c63534b48f85f657963984ea18f3c115b2d84372a4ac35f9a2f86b449c4"
+      "sha256": "e87a9b60e45f5bae76985c6d5a62593ad0aa9a07a09549f2aa521f99485db828"
     },
     {
       "path": "docs/INSTALL.md",
@@ -48,7 +48,7 @@
     },
     {
       "path": "docs/RELEASING.md",
-      "sha256": "6b98b3b45b5d8b21728c0f3536a48319cb4e88c25d21bbd2d91d580aafd1de55"
+      "sha256": "206624a0065bbdaa51c4d6fe92e73679542ac26097e2037e0fa9e0324a66216d"
     },
     {
       "path": "LICENSE",
@@ -60,15 +60,15 @@
     },
     {
       "path": "package-lock.json",
-      "sha256": "0ae325755b53e766596b1375df284a1f449ab5b4f6c762e534114d5e2c4a6214"
+      "sha256": "79bc8a8dcdc835de0b514d53c582164eb8263e9e10b1cb79e5abdbdedafde1ac"
     },
     {
       "path": "package.json",
-      "sha256": "6282785a6770d1f9b84fba83e1ce976cdf88ba0a8347177bfe508c59041506cb"
+      "sha256": "c2abb32606ba69fe403c25e3eeb5edcdf21fd805e823a09f1b3b3d67f08511ca"
     },
     {
       "path": "packages/codex-plugin/.codex-plugin/plugin.json",
-      "sha256": "db3946c198d988e8e63233894a7ac1bd89d52d4fda53ff07fadc995ec2527d64"
+      "sha256": "3a468f016c689a313292bfec55bd80b9ca160f60a7542496b2baaaf01f666290"
     },
     {
       "path": "packages/codex-plugin/mcp.template.json",
@@ -76,11 +76,11 @@
     },
     {
       "path": "packages/codex-plugin/package.json",
-      "sha256": "f741aa4e8de35c4a79ee3999717265bafc599fe59d4a79e245b0a04ad702172f"
+      "sha256": "0eb4187f50b2d870347ba412a45f4fbaf2d898f97f134a392d588663251b61d8"
     },
     {
       "path": "packages/codex-plugin/plugin.json",
-      "sha256": "316ff7997b359ffa1071da02f8c992d3f11a2cd3b8ac3e2bdac6cbe44a12a98f"
+      "sha256": "26b64af401a6d55e5e8df156fccfb7b9a104d2a04443070dfde59d01a9301e3f"
     },
     {
       "path": "packages/dsh-plugin/cordis.patch.yml",
@@ -92,7 +92,7 @@
     },
     {
       "path": "packages/dsh-plugin/package.json",
-      "sha256": "49c8f02bb31574953b27e7c52ee9120a5f59f4f954367497f995215627289135"
+      "sha256": "3865a6ec31af183445450726877da0789707b36b134b4419c5c244d1d4e9d6f1"
     },
     {
       "path": "packages/dsh-plugin/README.md",
@@ -100,11 +100,11 @@
     },
     {
       "path": "plugins/dsh-control/.codex-plugin/plugin.json",
-      "sha256": "db3946c198d988e8e63233894a7ac1bd89d52d4fda53ff07fadc995ec2527d64"
+      "sha256": "3a468f016c689a313292bfec55bd80b9ca160f60a7542496b2baaaf01f666290"
     },
     {
       "path": "plugins/dsh-control/plugin.json",
-      "sha256": "316ff7997b359ffa1071da02f8c992d3f11a2cd3b8ac3e2bdac6cbe44a12a98f"
+      "sha256": "26b64af401a6d55e5e8df156fccfb7b9a104d2a04443070dfde59d01a9301e3f"
     },
     {
       "path": "plugins/dsh-control/skills/dsh-control/agents/openai.yaml",
@@ -120,11 +120,11 @@
     },
     {
       "path": "README.md",
-      "sha256": "a1ea7cfaa6170abfaf41467c7fe45581e524e0ded8a80a5ed52e89c8aa9e6580"
+      "sha256": "0bdc99dc4bf23d3134b3fd2169ed7a6c66f76211949a6ef2d12dffadf56a125e"
     },
     {
       "path": "README.zh-CN.md",
-      "sha256": "9dc89477fc6162527e07a6826903c9e9ffd85e581eb1c0466f2088666cc2c770"
+      "sha256": "50768b326a6f6e5c170d086e6e8754f5dbdb7fa56fce84119f6e2f1bb3df71c8"
     },
     {
       "path": "scripts/build.mjs",
@@ -176,7 +176,7 @@
     },
     {
       "path": "src/desktop-host.mjs",
-      "sha256": "29b21eeb6d004a58231af7ab95168ae7142f3e1704eeab4661279cf8cf345159"
+      "sha256": "1bb8fdaa22e161b3a5e7f77ab0f131c5767846de2c8960a0a06a56d6fd8b0cce"
     },
     {
       "path": "src/desktop-plugin.mjs",
@@ -184,7 +184,7 @@
     },
     {
       "path": "src/mcp.mjs",
-      "sha256": "eed8831174de62147f94581186e55982148ca76b0df76e293099bdabea510442"
+      "sha256": "0bdcb0accfadcd60fcc60867f6f17e482896a878ad17b179ffc1effd0fb8dfc5"
     },
     {
       "path": "src/permissions.mjs",
@@ -251,6 +251,10 @@
       "sha256": "16e9824d6bf2bec95d23338f5e75976f19713c69636add21eaf7be3f6e6060ef"
     },
     {
+      "path": "test/native-permissions-live.mjs",
+      "sha256": "7178dfbe0e20e9dbdb50eff02a649938e5fec0492139109c59863d6f670322e4"
+    },
+    {
       "path": "test/package.test.mjs",
       "sha256": "0d3388681c775f193fe34e51ac6511225f5a7ab967f433e0d044bd06bb3158d5"
     },
@@ -260,7 +264,7 @@
     },
     {
       "path": "test/public-release.test.mjs",
-      "sha256": "fcb735ffd7136de9331103155f5ba63031376393a196cd5b97ce766abc8b01e2"
+      "sha256": "0be1c79111cd3bf9dfe3aa9d3f924fea162bda70147e0b971f665754b71c477c"
     },
     {
       "path": "test/reconnect.test.mjs",

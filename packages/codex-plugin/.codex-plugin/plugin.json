@@ -1,6 +1,6 @@
 {
   "name": "dsh-control",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Let Codex supervise bounded tasks on the local DeepSeek Harness Desktop session through a fixed tool set.",
   "author": {
     "name": "tuotuo512"

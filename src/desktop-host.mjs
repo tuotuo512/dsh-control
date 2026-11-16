@@ -6,7 +6,7 @@ import {writeJson, readJson, redact} from './store.mjs';
 import {PROTOCOL_VERSION, CAPABILITIES} from './protocol.mjs';
 import {PERMISSIONS, checkPermission, isWriter} from './permissions.mjs';
 
-export const PLUGIN_VERSION = '0.7.0';
+export const PLUGIN_VERSION = '0.7.1';
 const done = new Set(['completed', 'failed', 'cancelled', 'timed_out', 'interrupted']);
 const clean = value => JSON.parse(redact(JSON.stringify(value)));
 const hash = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
