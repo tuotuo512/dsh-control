@@ -1,0 +1,10 @@
+{
+  "_comment": "Reference shape only; NOT referenced by any plugin manifest. Verified with codex-cli 0.169.0-alpha.11.1 (2026-11-15): (1) ${PLUGIN_ROOT} is not expanded inside MCP args; (2) a local marketplace plugin gets no plugin cwd; (3) `codex mcp list` does not surface a freshly added plugin's MCP server until Codex's own app synchronization runs. The installer therefore registers the single MCP server in config.toml with absolute paths, and the plugin ships skills/interface only, so no second bridge can start.",
+  "mcpServers": {
+    "dsh-control": {
+      "type": "stdio",
+      "command": "<node executable>",
+      "args": ["<DSH_CONTROL_HOME>/codex-server/<digest>/mcp.mjs"]
+    }
+  }
+}

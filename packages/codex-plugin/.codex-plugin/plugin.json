@@ -1,0 +1,30 @@
+{
+  "name": "dsh-control",
+  "version": "0.6.0",
+  "description": "Let Codex supervise bounded tasks on the local DeepSeek Harness Desktop session through a fixed tool set.",
+  "author": {
+    "name": "tuotuo512"
+  },
+  "license": "MIT",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "mcp",
+    "delegation",
+    "supervisor"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "DSH Control",
+    "shortDescription": "Delegate tasks to local DeepSeek Harness",
+    "longDescription": "Codex keeps planning and acceptance. The plugin exposes thirteen fixed tools that start, supervise, answer and cancel bounded DeepSeek Harness runs, and reports the durable Markdown report for every run. Native sessions remain owned by DeepSeek Harness.",
+    "developerName": "tuotuo512",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Structured results"
+    ],
+    "defaultPrompt": "Check the local DeepSeek Harness bridge status with dsh_doctor, then delegate one bounded read-only task."
+  }
+}

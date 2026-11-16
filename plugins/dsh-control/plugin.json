@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dsh-control",
+  "version": "0.6.0",
+  "description": "Let Codex supervise bounded tasks on the local DeepSeek Harness Desktop session through a fixed tool set.",
+  "author": {
+    "name": "tuotuo512"
+  },
+  "license": "MIT",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "mcp",
+    "delegation",
+    "supervisor"
+  ]
+}

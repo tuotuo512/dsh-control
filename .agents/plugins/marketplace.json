@@ -1,0 +1,20 @@
+{
+  "name": "dsh-control-local",
+  "interface": {
+    "displayName": "DSH Control"
+  },
+  "plugins": [
+    {
+      "name": "dsh-control",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dsh-control"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

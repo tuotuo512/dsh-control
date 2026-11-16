@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "platform": "win32",
+      "version": "0.2.2-rc.3",
+      "buildCommit": "6b729fedde0c8fd03af7afdf5a711aa64fe87c3b",
+      "archiveSha256": "14cfd81c9135bf0afb89417543c94f9ecfe09266574452a9b106890c698725ae",
+      "protocolPackageVersion": "0.2.2-rc.3"
+    }
+  ]
+}

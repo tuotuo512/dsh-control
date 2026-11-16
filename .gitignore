@@ -1,0 +1,14 @@
+node_modules/
+.test-state/
+dist/
+*.tmp
+exports/
+coverage/
+.env
+.env.*
+*.pem
+*.pfx
+*.p12
+/config.json
+/conversation-bindings.json
+/runs/

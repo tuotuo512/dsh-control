@@ -1,0 +1,6 @@
+# dsh-control native bridge bundle.
+# Registration only: the execution code stays in the digest-pinned snapshot under
+# $DSH_CONTROL_HOME/native-plugin/<sha256> and is loaded by index.js.
+- insert:
+    - id: dsh-control-bridge
+      name: dsh-control-bridge

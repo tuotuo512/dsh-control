@@ -1,0 +1,13 @@
+{
+  "name": "dsh-control",
+  "version": "0.6.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Codex supervisor for native DeepSeek Harness Desktop sessions and the installed SDK runtime",
+  "license": "MIT",
+  "author": "tuotuo512",
+  "repository": {"type":"git","url":"https://github.com/tuotuo512/dsh-control.git"},
+  "scripts": {"test": "node --test test/*.test.mjs", "build": "node scripts/build.mjs", "setup":"node src/setup.mjs", "install:plugin": "node scripts/install.mjs", "doctor": "node scripts/doctor.mjs", "mcp": "node src/mcp.mjs", "release:check":"node scripts/public-release.mjs check", "release:export":"node scripts/public-release.mjs export", "release:archive":"node scripts/public-release.mjs archive"},
+  "engines": {"node": ">=22"},
+  "dependencies": {"@modelcontextprotocol/sdk": "1.32.2", "zod": "4.6.7"}
+}
