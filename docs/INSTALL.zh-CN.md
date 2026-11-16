@@ -30,3 +30,7 @@ apply必须先setup；任务仍运行或租约未释放时拒绝，不要为安�
 首次派工用小范围只读任务。先列工作区，再以选中项目的规范cwd和workspaceId，通过UTF-8 JSON传给start。用status/result跟踪，另核前端可见性；清单存在不等于已观察到界面。未知提交不换requestId重放。
 
 更新先plan，等已有任务结束再apply并verify。卸载用npm run install:plugin -- uninstall，保留runs与报告。已有配置不通过首次setup重置；用doctor诊断，不删状态、不复制凭据、不安装另一套Harness或重启Host绕过问题。
+
+任务忙时可先用 `npm run install:plugin -- stage`，复制并校验不可变候选，不改注册、不动当前任务；全部受管任务释放租约后再 apply 和 verify。stage 不是启用，也不会偷偷安排自动更新。
+
+项目权限与关系笔记分开。用准确 cwd 读取 workspace_policy，再明确保存 permission 与 expectedRevision。支持 read-only、workspace-write、danger-full-access（无沙箱、无审批提示）；start/adopt 省略权限时沿用该项目设置，已有会话保持原权限。完全访问仍需声明 ownedPaths，不授权系统/目录权限修复。新任务先用 preflight，日常 list/status/wait 用 compact:true。预检不建聊天、不调用模型，命令执行未实测会标记 not_probed。JSON 示例见[操作参考](../skill/references/operations.md)。

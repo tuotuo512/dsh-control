@@ -28,7 +28,7 @@ export async function apply(ctx,options={}) {
     const bytes=physicalFs.readFileSync(cfg.archive);const digest=crypto.createHash('sha256').update(bytes).digest('hex');
     if(digest!==cfg.verifiedArchiveSha256)throw new Error('Installed Desktop changed; revalidate native contract first');
     const instanceId=crypto.randomUUID();
-    const sourceFiles=['desktop-plugin.mjs','desktop-host.mjs','store.mjs','protocol.mjs'].map(n=>path.join(path.dirname(fileURLToPath(import.meta.url)),n));
+    const sourceFiles=['desktop-plugin.mjs','desktop-host.mjs','store.mjs','protocol.mjs','permissions.mjs'].map(n=>path.join(path.dirname(fileURLToPath(import.meta.url)),n));
     const sourceDigest=crypto.createHash('sha256').update(Buffer.concat(sourceFiles.map(f=>fs.readFileSync(f)))).digest('hex');
     const runtime={pid:process.pid,hostPid:process.pid,instanceId,archiveSha256:digest,sourceDigest,hostEntrypoint:process.argv[1]};
     diagnostic(home,'connecting-events');

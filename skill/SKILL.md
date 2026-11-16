@@ -9,7 +9,7 @@ Codex owns intent, scope, permissions, coordination, review and final acceptance
 
 ## Discover the actual bridge
 
-Discover thirteen dsh-control tools: doctor, start, send, status, result, list, wait, respond, cancel, desktop_workspaces, desktop_session, desktop_sessions, adopt (all MCP names have `dsh_` prefix). Begin with doctor/list and verify the deployed identity. Do not install another Harness, downgrade models or restart the Desktop Host.
+Discover fifteen dsh-control tools: doctor, preflight, workspace_policy, start, send, status, result, list, wait, respond, cancel, desktop_workspaces, desktop_session, desktop_sessions, adopt (all MCP names have `dsh_` prefix). Begin with doctor and compact list to verify the deployed identity and existing tasks. Do not install another Harness, downgrade models or restart the Desktop Host.
 
 CLI uses the identical controller and argument shapes. From a source checkout use `node src/cli.mjs <operation>`. For an installed deployment, use doctor.stateDirectory to read the latest installation receipt and locate `serverDir/cli.mjs`; do not pick an arbitrary old snapshot. Use UTF-8 JSON files with `--input` or stdin. doctor/list/desktop_workspaces/desktop_sessions may omit input. Read [operations](references/operations.md) for parameters.
 
@@ -23,7 +23,15 @@ New conversations default to frontend-visible Desktop: explicitly select backend
 
 ## Delegate and finish
 
-Give each worker necessary context, cwd, owned files, permission and acceptance conditions; it does not inherit this chat automatically. Default read-only, at most the configured parallel limit. Writes require explicit workspace-write and absolute ownedPaths; follow the target repository's isolation rules. Ownership coordination is not a per-file security sandbox.
+Give each worker necessary context, cwd, owned files, permission and acceptance conditions; it does not inherit this chat automatically. Omitted permission follows the saved project policy, otherwise read-only. Both workspace-write and danger-full-access require absolute ownedPaths; follow the target repository's isolation rules. Ownership coordination is not a per-file security sandbox. Full access also disables approval prompts; it does not authorize unrelated effects or administrator/ACL changes. Only save a project's policy when the user has authorized that choice; do not infer full access from a blocked shell. Existing sessions retain their assigned permission.
+
+## Fast path without losing identity
+
+Use preflight with the exact cwd, workspaceId and ownedPaths to combine runtime, native host, project policy and writer checks without creating a chat or calling a model. It reports shell:not_probed: configuration readiness is not proof that pwsh works. Explicit permission overrides the project default. To remember a user's choice, read workspace_policy, then save permission with its expectedRevision; null removes it. Do not put permissions into the relationship notebook. Current-tool schemas may be stale after an update: use the same implementation's CLI rather than dropping fields or switching backend.
+
+Keep the actual assignment short (normally 5-10 lines): goal; required document/section; files owned; observable acceptance and relevant checks; constraints. Put code maps, rationale and historical evidence into the referenced task document. Do not repeat whole documents, require a fresh plan-only reply, or assign a fixed project. A worker should read the task document and perform one cheap shell check early; on a sandbox provisioning failure it reports once, uses file tools where possible, and leaves command checks to the supervisor. Never automatically repair Windows ACLs, increase permission, resend or cancel to clear a blocker.
+
+For routine monitoring use list/wait with compact:true and per-run event cursors. Fetch bounded status events only for new blockers or important progress; collect the full result once at the review boundary. Preserve pending IDs, terminal/lease checks and mutation-time revalidation. Do not poll without a cursor or repeatedly dump the same runtime, path list and old tool output.
 
 Use a stable requestId; retry only with the same arguments and identity. Unknown outcomes require inspection, never a fresh-ID replay. Adopt only explicitly selected idle native sessions after exact checks; adoption submits no prompt. Never seize an unrelated active task.
 

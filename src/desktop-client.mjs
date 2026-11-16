@@ -13,7 +13,7 @@ export class DesktopRequestError extends Error {
     this.outcomeUnknown=outcomeUnknown; this.noEffects=noEffects;
   }
 }
-const preAdmissionRefusal = /busy or has queued input|pending native input|background activity|Existing session not found|Subagent sessions cannot|Restore an archived|Only read-only|requires ownedPaths|Owned paths must|timeoutSeconds must|parallel limit reached|write ownership overlaps|explicit adoption|implicit reuse refused|already has an active supervised run/;
+const preAdmissionRefusal = /busy or has queued input|pending native input|background activity|Existing session not found|Subagent sessions cannot|Restore an archived|Only read-only|requires ownedPaths|Owned paths must|Invalid permission|Native permission preset is unavailable|timeoutSeconds must|parallel limit reached|write ownership overlaps|explicit adoption|implicit reuse refused|already has an active supervised run/;
 
 export class DesktopClient {
   constructor(home, { fetchImpl = fetch } = {}) {

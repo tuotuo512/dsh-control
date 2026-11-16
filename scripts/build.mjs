@@ -16,7 +16,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
-const SERVER_FILES = ['mcp.mjs', 'controller.mjs', 'cli.mjs', 'worker.mjs', 'store.mjs', 'runtime.mjs', 'desktop-client.mjs', 'acp-client.mjs', 'protocol.mjs', 'bindings.mjs'];
+const SERVER_FILES = ['mcp.mjs', 'controller.mjs', 'cli.mjs', 'worker.mjs', 'store.mjs', 'runtime.mjs', 'desktop-client.mjs', 'acp-client.mjs', 'protocol.mjs', 'bindings.mjs', 'permissions.mjs'];
 
 const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));

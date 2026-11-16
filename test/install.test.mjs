@@ -30,6 +30,23 @@ function workspace() {
 
 const cleanup = base => fs.rmSync(base, {recursive: true, force: true});
 
+test('stage prepares candidates during live work without activating registrations or changing the run',()=>{
+ const w=workspace();try{
+  const runDir=path.join(w.home,'runs','run-'+'a'.repeat(24));fs.mkdirSync(runDir,{recursive:true});
+  const state=JSON.stringify({runId:'run-'+'a'.repeat(24),status:'running',sessionId:'fixture-active'});fs.writeFileSync(path.join(runDir,'state.json'),state);
+  const profile=path.join(w.dshHome,'profiles','p1','cordis.patch.yml'),before=fs.readFileSync(profile,'utf8');
+  const result=install.stage({home:w.home,codexRoot:w.codexRoot,dshHome:w.dshHome,profile:'p1',dist:w.dist});
+  assert.equal(result.activated,false);assert.equal(result.busy.length,1);assert.ok(fs.existsSync(result.serverDir));
+  assert.equal(fs.readFileSync(profile,'utf8'),before);assert.equal(fs.existsSync(path.join(w.codexRoot,'config.toml')),false);
+  assert.equal(fs.readFileSync(path.join(runDir,'state.json'),'utf8'),state);
+  const manifestFile=path.join(w.dist,'manifest.json'),manifest=JSON.parse(fs.readFileSync(manifestFile,'utf8'));
+  manifest.packages.codex.files=[{path:'server/mcp.mjs',sha256:crypto.createHash('sha256').update('export {};\n').digest('hex')}];
+  fs.writeFileSync(manifestFile,JSON.stringify(manifest));fs.writeFileSync(path.join(result.serverDir,'mcp.mjs'),'tampered');
+  assert.throws(()=>install.stage({home:w.home,codexRoot:w.codexRoot,dshHome:w.dshHome,profile:'p1',dist:w.dist}),/deployment changed/);
+  assert.throws(()=>install.apply({home:w.home,codexRoot:w.codexRoot,dshHome:w.dshHome,profile:'p1',dist:w.dist}),/still live/);
+ }finally{cleanup(w.base);}
+});
+
 test('profile patch replaces an empty document instead of appending a second one', () => {
   const w = workspace();
   try {

@@ -15,6 +15,7 @@ export function workerPrompt(state) {
     `Workspace: ${state.cwd}. Permission: ${state.permission}. Owned paths: ${state.ownedPaths.join(', ') || 'none (read-only)'}.`,
     'You are not alone in the workspace. Preserve other people\'s edits. Follow applicable AGENTS.md and owner documentation. Stay within the assigned task and owned paths. Do not delegate further, publish, commit, install software, or launch background processes unless the task explicitly authorizes it.',
     'Use ask_user_question for a blocking question to the supervisor. Never request or print secrets. Report actual results, changed files, checks and unresolved items; do not claim completion without evidence. For a connectivity-only prompt, follow its requested concise response.',
+    'For implementation work, verify one cheap shell command early, then read the referenced task document instead of repeating its background. On sandbox provisioning failure, report the exact blocker once and continue with available file tools; never repair Windows permissions or escalate automatically. Full access changes execution restrictions, not the assigned task or owned files.',
     ...(state.backend === 'acp' ? ['This ACP session has no interactive question tool. If you are blocked on a decision, stop and report the exact question in your final message instead of waiting.'] : []),
     '--- Assigned task ---', state.prompt,
   ].join('\n');
@@ -73,8 +74,14 @@ export async function runWorker(home, runId, {open = openRuntime, inspect = insp
         const tool = state.tools.find(t => t.callId === callId) || state.tools.findLast(t => t.status === 'running');
         const toolError = d.message?.error;
         if (tool) { tool.status = toolError ? 'error' : 'returned'; if (toolError) tool.error = redact(JSON.stringify(toolError)); }
-        record({type: 'tool_result', callId: tool?.callId, name: tool?.name, error: toolError ? redact(JSON.stringify(toolError)) : undefined,
-          text: redact(publicText(d.message?.content)).slice(0, 6000)});
+        const resultText = redact(publicText(d.message?.content)).slice(0, 6000);
+        if (tool?.name === 'pwsh' && /sandbox-local:.*(?:workspace grant failed|SetNamedSecurityInfo)|windows-acl workspace grant failed/i.test(resultText + JSON.stringify(toolError ?? ''))) {
+          state.executionHealth = {shell:'blocked', code:'sandbox_workspace_grant_failed', callId:tool.callId, action:'Report once; use file tools or supervisor-run checks. Do not repair ACLs or escalate automatically.'};
+          record({type:'execution_blocked', ...state.executionHealth});
+        } else if (tool?.name === 'pwsh' && state.executionHealth?.shell === 'blocked') {
+          state.executionHealth = {shell:'unknown', lastFailure:state.executionHealth, callId:tool.callId, action:'A later shell result exists; inspect it before treating the earlier blocker as current.'};
+        }
+        record({type: 'tool_result', callId: tool?.callId, name: tool?.name, error: toolError ? redact(JSON.stringify(toolError)) : undefined, text:resultText});
       } else if (e.type === 'turn/end') {
         lastTurn = d.reason; state.turnReason = d.reason; record({type: 'turn_end', reason: d.reason, turn: d.turn});
       }

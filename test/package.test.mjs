@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
 const readJson = rel => JSON.parse(read(rel));
 
-const NATIVE_FILES = ['desktop-plugin.mjs', 'desktop-host.mjs', 'store.mjs', 'protocol.mjs'];
+const NATIVE_FILES = ['desktop-plugin.mjs', 'desktop-host.mjs', 'store.mjs', 'protocol.mjs', 'permissions.mjs'];
 const digestOf = dir => {
   const hash = crypto.createHash('sha256');
   for (const file of NATIVE_FILES) hash.update(fs.readFileSync(path.join(dir, file)));

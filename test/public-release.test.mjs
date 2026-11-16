@@ -28,7 +28,7 @@ test('export refuses an existing destination or a source descendant and preserve
   }finally{f.close();}
 });
 test('release entry points have no automatic npm install lifecycle and versions/licenses agree',()=>{
-  const result=checkRelease();assert.equal(result.ok,true);assert.equal(result.version,'0.6.0');
+  const result=checkRelease();assert.equal(result.ok,true);assert.equal(result.version,'0.7.0');
   const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));assert.equal(pkg.scripts.install,undefined);assert.equal(pkg.license,'MIT');
 });
 test('release check rejects corrupted documentation and links to excluded private files',()=>{

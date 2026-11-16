@@ -4,8 +4,9 @@ import crypto from 'node:crypto';
 import http from 'node:http';
 import {writeJson, readJson, redact} from './store.mjs';
 import {PROTOCOL_VERSION, CAPABILITIES} from './protocol.mjs';
+import {PERMISSIONS, checkPermission, isWriter} from './permissions.mjs';
 
-export const PLUGIN_VERSION = '0.6.0';
+export const PLUGIN_VERSION = '0.7.0';
 const done = new Set(['completed', 'failed', 'cancelled', 'timed_out', 'interrupted']);
 const clean = value => JSON.parse(redact(JSON.stringify(value)));
 const hash = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -33,9 +34,9 @@ const scope = input => {
   const cwd = canonical(input.cwd);
   if (!fs.statSync(cwd).isDirectory()) throw new Error('cwd must be an existing directory');
   const permission = input.permission || 'read-only';
-  if (!['read-only', 'workspace-write'].includes(permission)) throw new Error('Only read-only or workspace-write are allowed');
+  checkPermission(permission);
   const ownedPaths = (input.ownedPaths || []).map(canonical);
-  if (permission === 'workspace-write' && !ownedPaths.length) throw new Error('workspace-write requires ownedPaths');
+  if (isWriter(permission) && !ownedPaths.length) throw new Error('Write permission requires ownedPaths');
   if (ownedPaths.some(p => !contains(cwd,p))) throw new Error('Owned paths must remain inside cwd');
   const timeoutSeconds = input.timeoutSeconds ?? 1800;
   if (!Number.isInteger(timeoutSeconds) || timeoutSeconds < 5 || timeoutSeconds > 14400) throw new Error('timeoutSeconds must be 5..14400');
@@ -82,7 +83,16 @@ export class DesktopHostController {
     fs.appendFileSync(path.join(this.runHome,run.runId+'.events.jsonl'),JSON.stringify(frame)+'\n',{mode:0o600});
     this.persist(run);
   }
-  health() {return {ready:!this.closed,backend:'desktop',pluginVersion:PLUGIN_VERSION,protocolVersion:PROTOCOL_VERSION,...this.runtime,capabilities:{operations:[...CAPABILITIES],nativeWorkspace:true,nativeTitle:true,liveEvents:true,sharedQuestions:true,adoptIdleSession:true,killDesktop:false}};}
+  supportedPermissions() {
+    const catalog = this.ctx.permissionPresets.catalog?.();
+    return catalog ? PERMISSIONS.filter(p => catalog.options?.some(o => o.value === p)) : PERMISSIONS.filter(p => p !== 'danger-full-access');
+  }
+  applyPermission(agent, permission) {
+    if (!this.supportedPermissions().includes(permission)) throw new Error('Native permission preset is unavailable');
+    this.ctx.permissionPresets.set(agent.session, permission);
+    if (this.ctx.permissionPresets.current && this.ctx.permissionPresets.current(agent.session) !== permission) throw new Error('Native permission preset readback mismatch');
+  }
+  health() {return {ready:!this.closed,backend:'desktop',pluginVersion:PLUGIN_VERSION,protocolVersion:PROTOCOL_VERSION,...this.runtime,permissionPresets:this.supportedPermissions(),capabilities:{operations:[...CAPABILITIES],nativeWorkspace:true,nativeTitle:true,liveEvents:true,sharedQuestions:true,adoptIdleSession:true,killDesktop:false}};}
   async assertIdle(sessionId) {
     if (this.activeRun(sessionId)) throw new Error('Session already has an active supervised run');
     const agent=this.ctx.agents.get(sessionId);
@@ -152,8 +162,8 @@ export class DesktopHostController {
     const agent=await this.resolveAgent(input.sessionId);await this.assertIdle(input.sessionId);await this.assertSendable(input.sessionId);
     const workspace=await this.ctx.workspaceRegistry.create(assigned.cwd);
     await workspace.attachSession(input.sessionId);
-    this.ctx.permissionPresets.set(agent.session,assigned.permission);
     const route=agent.model.current();if(!route?.provider||!route?.model)throw new Error('Existing session has no established model route');
+    this.applyPermission(agent,assigned.permission);
     const title=this.ctx.sessionProjections.snapshot(agent.session,['title']).values.title||'DSH adopted session';
     const value={sessionId:input.sessionId,...assigned,title,provider:route.provider,model:route.model,reasoningEffort:route.reasoningEffort,
       workspaceId:workspace.id,hostPid:this.runtime.pid,backend:'desktop'};
@@ -167,6 +177,7 @@ export class DesktopHostController {
     const signature=hash(input),prior=this.runs.get(input.runId);
     if(prior){if(prior.signature!==signature)throw new Error('Native runId reused with different arguments');if(prior.status==='interrupted')throw new Error(prior.error);return this.openReceipt(prior);}
     const assigned=scope(input);text(input.title,'title',200);text(input.provider,'provider',200);text(input.model,'model',200);
+    if(!this.supportedPermissions().includes(assigned.permission))throw new Error('Native permission preset is unavailable');
     const resumedInfo=input.resume?await this.assertSendable(input.sessionId):undefined;
     const selectedWorkspaceId=input.workspaceId??(input.resume?this.registry.sessions[input.sessionId]?.workspaceId:undefined);
     let selectedWorkspace;
@@ -179,7 +190,7 @@ export class DesktopHostController {
     if(resumedInfo)this.assertSessionWorkspace(resumedInfo,{...assigned,workspaceId:selectedWorkspaceId});
     const active=[...this.runs.values()].filter(r=>!done.has(r.status));
     if(active.length>=this.maxParallel)throw new Error('Native parallel limit reached');
-    if(assigned.permission==='workspace-write')for(const other of active.filter(r=>r.permission==='workspace-write')){
+    if(isWriter(assigned.permission))for(const other of active.filter(r=>isWriter(r.permission))){
       if(other.ownedPaths.some(a=>assigned.ownedPaths.some(b=>contains(a,b)||contains(b,a))))throw new Error('Native write ownership overlaps another active run');
     }
     await this.assertIdle(input.sessionId);
@@ -196,7 +207,7 @@ export class DesktopHostController {
       if(input.resume){agent=await this.resolveAgent(input.sessionId);if(canonical(agent.session.header.cwd)!==assigned.cwd)throw new Error('Resumed session cwd differs from assigned workspace');await workspace.attachSession(input.sessionId);}
       else {const created=await this.ctx.sessionController.create({sessionId:input.sessionId,workspaceId:workspace.id});if(created.sessionId!==input.sessionId)throw new Error('Native create returned a different session; prompt refused');agent=await this.resolveAgent(created.sessionId);}
       await this.assertIdle(input.sessionId);
-      this.ctx.permissionPresets.set(agent.session,assigned.permission);
+      this.applyPermission(agent,assigned.permission);
       agent.model.select({provider:input.provider,model:input.model,...input.reasoningEffort?{reasoningEffort:input.reasoningEffort}:{}});
       await this.ctx.sessionController.rename({sessionId:input.sessionId,title:input.title});
       run.afterSeq=agent.session.seq-1;

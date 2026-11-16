@@ -44,7 +44,8 @@ export function resolveHome(options = {}) {
 
 function digestOf(dir) {
   const hash = crypto.createHash('sha256');
-  for (const file of SNAPSHOT_FILES) {
+  const files = [...SNAPSHOT_FILES, ...(fs.existsSync(path.join(dir, 'permissions.mjs')) ? ['permissions.mjs'] : [])];
+  for (const file of files) {
     const full = path.join(dir, file);
     if (!fs.existsSync(full)) throw new Error(`Native bridge snapshot is missing ${file}: ${dir}`);
     hash.update(fs.readFileSync(full));

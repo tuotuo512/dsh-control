@@ -8,6 +8,24 @@ function fixture(){const home=fs.mkdtempSync(path.join(os.tmpdir(),'native-host-
  const input={runId:'run-'+'a'.repeat(24),requestId:'request',sessionId:'session-fixture',cwd:home,title:'Fixture title',permission:'workspace-write',ownedPaths:[path.join(home,'file.txt')],provider:'p',model:'m',timeoutSeconds:60};
  return{home,ctx,controller,input,calls,agents,make,bus,close:async()=>{await controller.close();fs.rmSync(home,{recursive:true,force:true});}};}
 const blocks=[{type:'text',text:'fixture'}];
+test('native full access follows actual catalog and readback; task scope still rejects overlaps',async()=>{
+ const f=fixture();try{
+  const selected=new Map();
+  f.ctx.permissionPresets.catalog=()=>({options:['read-only','workspace-write','danger-full-access'].map(value=>({value,name:value}))});
+  f.ctx.permissionPresets.current=session=>selected.get(session.id);
+  f.ctx.permissionPresets.set=(session,preset)=>{selected.set(session.id,preset);f.calls.push(['permission',preset]);};
+  assert.ok(f.controller.health().permissionPresets.includes('danger-full-access'));
+  await f.controller.open({...f.input,permission:'danger-full-access'});
+  assert.equal(selected.get(f.input.sessionId),'danger-full-access');
+  await assert.rejects(f.controller.open({...f.input,runId:'run-'+'b'.repeat(24),sessionId:'second',requestId:'second'}),/ownership overlaps/);
+  assert.equal(f.calls.filter(c=>c[0]==='create').length,1);
+ }finally{await f.close();}
+ const g=fixture();try{
+  assert.ok(!g.controller.health().permissionPresets.includes('danger-full-access'));
+  await assert.rejects(g.controller.open({...g.input,permission:'danger-full-access'}),/preset is unavailable/);
+  assert.equal(g.calls.length,0);
+ }finally{await g.close();}
+});
 test('native open creates workspace, title, permissions and deduplicates open/prompt',async()=>{const f=fixture();try{await f.controller.open(f.input);await f.controller.open(f.input);assert.equal(f.calls.filter(c=>c[0]==='create').length,1);assert.ok(f.calls.some(c=>c[0]==='permission'&&c[1]==='workspace-write'));assert.ok(f.calls.some(c=>c[0]==='rename'&&c[1].title==='Fixture title'));await assert.rejects(f.controller.open({...f.input,title:'different'}));await f.controller.prompt({runId:f.input.runId,contentBlocks:blocks});await f.controller.prompt({runId:f.input.runId,contentBlocks:blocks});assert.equal(f.calls.filter(c=>c[0]==='prompt').length,1);await assert.rejects(f.controller.prompt({runId:f.input.runId,contentBlocks:[{type:'text',text:'different'}]}));}finally{await f.close();}});
 test('busy native adoption refuses; idle adoption sends no prompt',async()=>{const f=fixture();try{const a=f.make('existing');a.status='running';await assert.rejects(f.controller.adopt({requestId:'adopt',sessionId:'existing'}),/busy/);a.status='idle';const r=await f.controller.adopt({requestId:'adopt',sessionId:'existing'});assert.equal(r.sessionId,'existing');assert.ok(!f.calls.some(c=>c[0]==='prompt'));}finally{await f.close();}});
 test('foreign events stay private; managed question and approval accept one reply across cancellation race',async()=>{const f=fixture();try{f.controller.remoteFrame({type:'waterfall',event:'user-questions/request',eventId:'foreign',agentId:'author',request:{questions:[]}});assert.equal(f.controller.pending.size,0);await f.controller.open(f.input);await f.controller.prompt({runId:f.input.runId,contentBlocks:blocks});for(const [id,event,request,response]of [['q','user-questions/request',{questions:[{id:'choice',options:[{label:'A'}]}]},{answers:[{id:'choice',selected:['A']}]}],['a','approval/request',{toolName:'pwsh',callId:'call',reason:'fixture'},{outcome:'rejected'}]]){f.controller.remoteFrame({type:'waterfall',event,eventId:id,agentId:f.input.sessionId,request});assert.equal(f.controller.pending.size,1);await f.controller.respond({runId:f.input.runId,pendingId:id,response});assert.equal(f.controller.pending.size,0);await f.controller.respond({runId:f.input.runId,pendingId:id,response});}assert.equal(f.calls.filter(c=>c[0]==='answer').length,2);assert.ok(!f.controller.poll({runId:f.input.runId}).events.some(e=>e.message.id==='foreign'));}finally{await f.close();}});

@@ -42,7 +42,8 @@ test('durable idempotency, same-session resume, and public-only result', async (
   const f = fixture(); const input = {requestId: 'first', cwd: f.cwd, prompt: 'hello'};
   const first = await f.controller.start(input); const duplicate = await f.controller.start(input);
   assert.equal(first.runId, duplicate.runId); assert.equal(duplicate.deduplicated, true);
-  assert.equal((await f.controller.start({...input, permission: 'read-only', ownedPaths: [], timeoutSeconds: 1800})).runId, first.runId);
+  assert.equal((await f.controller.start({...input, ownedPaths: [], timeoutSeconds: 1800})).runId, first.runId);
+  await assert.rejects(f.controller.start({...input, permission:'read-only'}), /different arguments/);
   await assert.rejects(f.controller.start({...input, prompt: 'different'}), /different arguments/);
   await Promise.all(f.jobs);
   const result = await f.controller.result({runId: first.runId}); assert.equal(result.status, 'completed'); assert.equal(result.output, 'PUBLIC_RESULT');

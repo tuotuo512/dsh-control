@@ -5,12 +5,14 @@ CLI and MCP share src/controller.mjs. MCP server: dsh-control. State defaults to
 | 操作 | 主要参数 | 含义 |
 |---|---|---|
 | doctor | `{}` | 安装版本、摘要、模型和配置就绪情况 |
+| workspace_policy | cwd, permission?, expectedRevision? | 读项目默认权限；保存需当前 revision，permission:null 清除；不改变既有会话 |
+| preflight | cwd, workspaceId?, backend?, permission?, ownedPaths? | 不建聊、不调用模型，检查运行环境、项目权限、路径和写入冲突；shell 未实测会明确标记 |
 | start | requestId, cwd, prompt, title?, workspaceId?, backend?, permission?, ownedPaths?, timeoutSeconds? | 新会话与首轮任务；默认只读、1800 秒 |
 | send | requestId, sessionId, prompt, title? | 复用受管历史会话，等待前一轮停止并释放租约后执行；保留原后端 |
-| status | runId, afterEvent?, maxEvents? | 状态与增量公开事件，返回 nextEvent |
+| status | runId, afterEvent?, maxEvents?, compact? | 状态与增量公开事件，返回 nextEvent；compact 去掉重复大字段 |
 | result | runId, maxChars? | 输出、工具摘要、状态和 Markdown 路径 |
-| list | limit? | 最近任务；新聊天恢复入口 |
-| wait | runIds, timeoutMs?, after? | 最多 8 个目标，单次最多 30000 毫秒；after 是 runId 到 eventCursor 的映射 |
+| list | limit?, compact? | 最近任务；新聊天恢复入口，日常使用 compact:true |
+| wait | runIds, timeoutMs?, after?, compact? | 最多 8 个目标，单次最多 30000 毫秒；after 是 runId 到 eventCursor 的映射 |
 | respond | runId, pendingId, response | 回答原问题或一次性审批 |
 | cancel | runId | 取消受管任务；原生仅释放任务监控，不结束 Host；必须查终态 |
 | desktop_workspaces | limit?, offset? | 只读分页工作区，含空工作区；返回 workspaces、total、nextOffset |
@@ -33,6 +35,16 @@ start仍必填cwd，workspaceId仅Desktop可选；指定id必须与cwd规范路�
 desktop_workspaces 的 limit 默认100、范围1..100，offset 默认0且为非负整数；nextOffset 为null表示末页。CLI的 doctor/list/desktop_workspaces/desktop_sessions 可省略输入；其他操作使用JSON文件或stdin。
 
 ## 示例
+
+项目默认权限单独保存，不进入关系笔记。先 `workspace_policy({"cwd":"D:\\some-repository"})`，再用返回的 revision 明确保存：
+
+```json
+{"cwd":"D:\\some-repository","permission":"danger-full-access","expectedRevision":0}
+```
+
+完全访问意味着无文件沙箱、无审批提示；不等于管理员、不授权系统设置或目录权限修复。清除该设置用 permission:null 和当前 revision。随后 start 省略 permission 即可沿用；已存在会话的 send 不随默认变化升级。两种写模式都须 ownedPaths，不能覆盖另一任务负责的文件。
+
+新建前可用 `preflight({"cwd":"D:\\some-repository","backend":"desktop","ownedPaths":["D:\\some-repository\\src"]})`；ready 只证明列出的准备项，shell:not_probed 不代表命令已实测。ACP 完全访问尚未验证时明确拒绝，不换后端代跑。日常监控用 list/wait 的 compact:true 和增量 cursor，详细 result 留到验收再取。
 
 存在/归档的原生检查只清理 backend为desktop的关联；SDK/ACP使用原后端身份与恢复合同，不用原生查询的“不存在”删除它们。
 

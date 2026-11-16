@@ -1,6 +1,6 @@
 {
   "name": "dsh-control-codex-plugin",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Codex plugin template for supervising local DeepSeek Harness sessions",

@@ -2,7 +2,7 @@
 
 Owner: this standalone infrastructure; Codex retains planning, scope, review and final decisions. DSH is an explicitly assigned worker. User trigger: “你来指挥 DSH / DeepSeek / DeepSeek Harness 工作”.
 
-Public source release 0.6.0 is a Windows preview. Installation is documented in [INSTALL](INSTALL.md), with supported scope in [COMPATIBILITY](COMPATIBILITY.md).
+Public source release 0.7.0 is a Windows preview. Installation is documented in [INSTALL](INSTALL.md), with supported scope in [COMPATIBILITY](COMPATIBILITY.md).
 
 ## Distribution and lifecycle
 
@@ -14,7 +14,7 @@ Public source release 0.6.0 is a Windows preview. Installation is documented in 
 | DSH bundle (`dist/dsh-plugin`, package `dsh-control-bridge`) | one patch row that registers the bridge | execution code, run state |
 | `scripts/install.mjs` | digest-pinned deployments, both registrations, migration, rollback, uninstall | the workspace, the Desktop installation, other plugins |
 
-**Single registration.** The thirteen tools are registered exactly once, in `<CODEX_HOME>/config.toml` as `[mcp_servers.dsh-control]`, pointing at `<DSH_CONTROL_HOME>/codex-server/<digest>/mcp.mjs`. The plugin manifest deliberately omits `mcpServers`: `${PLUGIN_ROOT}` is not expanded in MCP args, local marketplace plugins get no plugin cwd, and a freshly added plugin's MCP server is not visible to `codex mcp list` before Codex's own app sync (verified with codex-cli 0.169.0-alpha.11.1 on 2026-11-15). One registration channel means two bridges can never run.
+**Single registration.** The fifteen tools are registered exactly once, in `<CODEX_HOME>/config.toml` as `[mcp_servers.dsh-control]`, pointing at `<DSH_CONTROL_HOME>/codex-server/<digest>/mcp.mjs`. The plugin manifest deliberately omits `mcpServers`: `${PLUGIN_ROOT}` is not expanded in MCP args, local marketplace plugins get no plugin cwd, and a freshly added plugin's MCP server is not visible to `codex mcp list` before Codex's own app sync (verified with codex-cli 0.169.0-alpha.11.1 on 2026-11-15). One registration channel means two bridges can never run.
 
 **Bundles and snapshots.** `dsh plugin add` owns the profile dependency and the bundle list. Execution code stays in a digest-addressed directory `native-plugin/<sha256>` deployed by the installer; the bundle loader re-hashes the snapshot before import and refuses content that does not match its directory name. The profile override row (`id: dsh-control-bridge`) selects `home`, `snapshot` and `revision`. The `desktop` profile is owned by the Electron application and rejects `dsh plugin add` (verified 2026-11-15: `profile "desktop" is managed exclusively by the Electron application`), so that deployment uses the `file://` snapshot row; a single owned block exists in either mode, never both.
 
@@ -23,6 +23,8 @@ Public source release 0.6.0 is a Windows preview. Installation is documented in 
 **Install and update.** `plan` is read-only. `apply` refuses while any managed run is live or has an unreleased lease, deploys snapshots, checks registration preimages before replacement, verifies read-back and writes a receipt under `<DSH_CONTROL_HOME>/install/`. Rollback restores only unchanged postimages still owned by that attempt; a concurrent writer's changes are preserved and reported for inspection. MCP registration explicitly carries its state directory so later sessions do not depend on the install shell's environment.
 
 **Uninstall.** Refused while managed runs are live. Removes this project's profile block, Codex MCP entry, plugin registration and the standalone skill it installed. Keeps `runs/`, `report.md`, `events.jsonl`, receipts and connection data.
+
+**Stage without activation.** `install.mjs stage` may run while tasks are live. It prepares and hashes immutable Native/MCP candidates and writes a staged receipt only; no profile, MCP registration, installed skill, current descriptor or task is changed. A staged receipt is not an installation receipt. Existing apply still requires all managed runs and leases to settle before activating either end. Staging does not schedule hidden installation or imply that an ended Codex chat will wake up.
 
 **Foreign session stores.** Codex's own session store (`~/.codex/sessions`, `state_5.sqlite`, `session_index.jsonl`) is not owned by this project and is never written by the installer. Backups live beside the managed home (`<home>-backups`), never inside it, and generated exports stay out of the repository.
 
@@ -47,7 +49,11 @@ States: starting, running, awaiting_input, awaiting_approval, closing; terminal 
 
 ## Scope and permissions
 
-Default read-only. Explicit workspace-write requests require ownedPaths under the canonical workspace, and overlapping concurrent writers are refused. Ownership is a coordination boundary; DSH's workspace sandbox is the enforcement boundary, not per-file ownership. Use separate worktrees/workspaces for stronger write isolation. Do not grant danger-full-access. DSH must not delegate again, publish, commit, install, or start background processes unless the assigned task explicitly authorizes it. Default instructions require AGENTS compliance and evidence-backed reporting.
+Permission is explicit per task, or inherited from an explicitly saved canonical-workspace policy; an unconfigured workspace remains read-only. Supported presets are read-only, workspace-write and danger-full-access. Full access is a native execution preset, not administrator elevation or permission to change Windows ACLs. Both write presets require ownedPaths inside the canonical workspace and participate in the same overlapping-writer checks. These paths remain task ownership, not filesystem enforcement; full access removes the workspace sandbox and can reach outside those paths. It never expands the assigned business task or authorizes commits, installation, publication or system changes.
+
+`workspace_policy({cwd})` reads the separate workspace-permissions.json policy; `{cwd,permission,expectedRevision}` explicitly saves it, and permission:null removes that project's setting. Revision checks prevent lost updates; aliases resolve to a canonical directory, and parent policies are not inherited by child repositories. New start/adopt resolve an omitted permission; explicit task permission wins. send retains the existing session's assigned permission, even if a project default changes. No running task is upgraded, restarted or replayed. The connection notebook remains relationships only.
+
+`preflight` performs zero-model, zero-chat runtime/host/workspace/policy/admission checks and reports blockers and the effective permission. It is an observation, not an admission receipt or proof that a restricted shell can start. Shell status remains not_probed until actual tool evidence exists; sandbox failures are reported separately and never trigger automatic ACL repair or a silent permission escalation. Reuse exact workspace/session inspection and bounded compact status/wait for routine supervision; do not skip mutation-time identity, archive, ownership or fingerprint checks to gain speed.
 
 Questions and approval requests pause the run and are returned as structured pending input plus a Markdown report. A supervisor can respond explicitly; approval is not inferred from timeout. Deadline or cancellation stops only the managed task: SDK shuts down its owned child; Desktop cancels the native run and releases monitoring without terminating the Host. No undocumented session/cancel RPC is invented. Forced runtime termination may leave external side effects uncertain and is reported as such.
 
@@ -86,7 +92,9 @@ Status/wait/result return bounded public messages, tool summaries, terminal reas
 Native inspection can refresh or revoke only Desktop connections in the relationship notes. SDK/ACP connections use their original backend identities and recovery contracts; absence from the native registry is not evidence that one of those conversations was deleted.
 
 - doctor({}) -> installed runtime/config/readiness, no secret values.
-- start({requestId, cwd, prompt, title?, workspaceId?, backend?: 'sdk'|'desktop'|'acp', permission?: 'read-only'|'workspace-write', ownedPaths?: string[], timeoutSeconds?: number}) -> run snapshot. Required strings nonempty; cwd remains required. workspaceId is Desktop-only and must match cwd after canonicalization; unknown ids reject without creating a replacement. Native session create receives workspaceId without cwd. Default timeout 1800, 5..14400.
+- workspace_policy({cwd, permission?: 'read-only'|'workspace-write'|'danger-full-access'|null, expectedRevision?: number}) -> exact canonical project policy; mutation requires expectedRevision, null resets to read-only default.
+- preflight({cwd, workspaceId?, backend?, permission?, ownedPaths?}) -> start readiness, blockers, effective permission/source and shell:not_probed; zero task/chat/model calls. ACP full access is explicitly refused until that backend's preset behavior is verified.
+- start({requestId, cwd, prompt, title?, workspaceId?, backend?: 'sdk'|'desktop'|'acp', permission?: 'read-only'|'workspace-write'|'danger-full-access', ownedPaths?: string[], timeoutSeconds?: number}) -> run snapshot. Required strings nonempty; cwd remains required. workspaceId is Desktop-only and must match cwd after canonicalization; unknown ids reject without creating a replacement. Native session create receives workspaceId without cwd. Default timeout 1800, 5..14400.
 - send({requestId, sessionId, prompt, title?}) -> next run snapshot with stored workspaceId/cwd/permission/model/backend, after existence/archive checks.
 - status({runId, afterEvent?: number, maxEvents?: number}) -> snapshot + events after cursor; default 20, max 100. Reasoning omitted.
 - result({runId, maxChars?: number}) -> snapshot + public output + reportPath. Default 12000, max 50000.
@@ -99,7 +107,7 @@ Native inspection can refresh or revoke only Desktop connections in the relation
 - desktop_sessions({limit?: number}) -> {sessions}; default 20, 1..100; read-only native session inventory.
 - adopt({requestId, sessionId, permission?, ownedPaths?, timeoutSeconds?}) -> attached managed base snapshot; defaults read-only/1800 seconds, 5..14400. Explicitly adopts only an idle ordinary native session and submits no prompt; follow with send.
 
-MCP exposes thirteen tools: dsh_doctor/start/send/status/result/list/wait/respond/cancel/desktop_sessions/desktop_workspaces/desktop_session/adopt using those shapes. CLI `node src/cli.mjs <operation> [--input <json-file>]` or stdin JSON invokes the identical controller. UTF-8 JSON result, nonzero on error. MCP stdout is protocol only. No controller operations depend on MCP being connected.
+MCP exposes fifteen tools: dsh_doctor/preflight/workspace_policy/start/send/status/result/list/wait/respond/cancel/desktop_sessions/desktop_workspaces/desktop_session/adopt using those shapes. start/adopt accept the three presets above; omission resolves the project policy. status/list/wait also accept compact?:boolean to omit repeated runtime/path metadata while retaining pending, lease, error and report fields. CLI `node src/cli.mjs <operation> [--input <json-file>]` or stdin JSON invokes the identical controller. UTF-8 JSON result, nonzero on error. MCP stdout is protocol only. No controller operations depend on MCP being connected.
 
 HTTP status/code distinguish explicit rejection from transport uncertainty. An explicit pre-admission busy/invalid adoption refusal releases the local lease. A 409 alone is insufficient because setup may already have side effects; ambiguous rejection, timeout or disconnect retains interrupted/leaseHeld and never causes replay. A rejected open with no ownership must not cancel someone else's run; prompt rejection after open still requires managed-run cleanup.
 

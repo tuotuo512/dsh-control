@@ -24,7 +24,7 @@ import {config as runtimeConfig,inspectRuntime} from '../src/runtime.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BEGIN = '# BEGIN dsh-control managed block';
 const END = '# END dsh-control managed block';
-const NATIVE_FILES = ['desktop-plugin.mjs', 'desktop-host.mjs', 'store.mjs', 'protocol.mjs'];
+const NATIVE_FILES = ['desktop-plugin.mjs', 'desktop-host.mjs', 'store.mjs', 'protocol.mjs', 'permissions.mjs'];
 
 export const paths = (options = {}) => {
   const home = path.resolve(options.home || process.env.DSH_CONTROL_HOME || path.join(os.homedir(), '.codex', 'dsh-control-state'));
@@ -58,7 +58,12 @@ const writeAtomic = (file, text) => {
 };
 const digestOf = dir => {
   const hash = crypto.createHash('sha256');
-  for (const file of NATIVE_FILES) hash.update(fs.readFileSync(path.join(dir, file)));
+  // Older receipts predate the optional permissions module. Their four-file
+  // digests remain verifiable; removing it from a new snapshot still mismatches.
+  for (const file of NATIVE_FILES) {
+    if (file === 'permissions.mjs' && !fs.existsSync(path.join(dir, file))) continue;
+    hash.update(fs.readFileSync(path.join(dir, file)));
+  }
   return hash.digest('hex');
 };
 
@@ -232,7 +237,10 @@ function deployServer(p, built, revision) {
   const target = path.join(p.home, 'codex-server', revision);
   if (!fs.existsSync(source)) throw new Error('Build output missing codex-plugin/server');
   const entry = path.join(source, 'mcp.mjs');
-  if (fs.existsSync(path.join(target, 'mcp.mjs')) && sha256(entry) === sha256(path.join(target, 'mcp.mjs'))) return target;
+  if (fs.existsSync(path.join(target, 'mcp.mjs'))) {
+    if (sha256(entry) !== sha256(path.join(target, 'mcp.mjs'))) throw new Error(`Immutable server deployment changed: ${target}`);
+    verifyServerSnapshot(target, built); return target;
+  }
   fs.mkdirSync(path.join(target, 'node_modules'), {recursive: true});
   for (const item of fs.readdirSync(source, {withFileTypes: true})) {
     const from = path.join(source, item.name);
@@ -241,7 +249,17 @@ function deployServer(p, built, revision) {
     else fs.copyFileSync(from, to);
   }
   if (!fs.existsSync(path.join(target, 'mcp.mjs'))) throw new Error('Deployed server is missing mcp.mjs');
+  verifyServerSnapshot(target, built);
   return target;
+}
+
+function verifyServerSnapshot(serverDir, built) {
+  for (const entry of built.packages.codex.files ?? []) {
+    if (!entry.path.startsWith('server/')) continue;
+    const relative=entry.path.slice(7), target=path.resolve(serverDir,relative), rel=path.relative(serverDir,target);
+    if (!rel || rel==='..' || rel.startsWith('..'+path.sep) || path.isAbsolute(rel)) throw new Error('Invalid server manifest path');
+    if (!fs.existsSync(target) || sha256(target)!==entry.sha256) throw new Error(`Server snapshot digest mismatch: ${relative}`);
+  }
 }
 
 function deployNative(p, revision) {
@@ -416,6 +434,23 @@ export function apply(options = {}) {
   return {receipt, receiptFile};
 }
 
+/** Prepare immutable candidates while existing tasks keep their original code. */
+export function stage(options = {}) {
+  const p = paths(options), built = manifest(p);
+  const runtime = inspectRuntime(runtimeConfig(p.home));
+  if (!runtime.compatible) throw new Error(runtime.warning);
+  const nativeRevision = digestOf(path.join(root, 'src'));
+  const nativeSnapshot = deployNative(p, nativeRevision);
+  const serverDir = deployServer(p, built, built.packages.codex.digest.slice(0, 16));
+  // Hash every published server file, including dependencies; an entry file alone
+  // is insufficient evidence that a staged candidate is ready to activate.
+  verifyServerSnapshot(serverDir, built);
+  const candidate = {at:new Date().toISOString(), activated:false, packageVersion:built.version, nativeRevision, nativeSnapshot, serverDir, busy:liveRuns(p.home), next:'apply after managed runs release their leases'};
+  const file = path.join(p.home, 'install', 'staged-' + built.packages.codex.digest.slice(0,16) + '.json');
+  writeAtomic(file, JSON.stringify(candidate,null,2) + '\n');
+  return {...candidate, candidateFile:file};
+}
+
 export function uninstall(options = {}) {
   const p = paths(options);
   const busy = liveRuns(p.home);
@@ -446,6 +481,7 @@ function main(argv) {
   }
   if (command === 'plan') return plan(options);
   if (command === 'apply') return apply(options);
+  if (command === 'stage') return stage(options);
   if (command === 'uninstall') return uninstall(options);
   if (command === 'verify') return verify(options);
   throw new Error(`Unknown command: ${command}`);
